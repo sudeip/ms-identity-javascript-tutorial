@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const path = require('path');
 
@@ -6,6 +7,15 @@ const DEFAULT_PORT = process.env.PORT || 3000;
 
 // initialize express.
 const app = express();
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+app.use(limiter);
 
 // Configure morgan module to log all requests.
 app.use(morgan('dev'));
