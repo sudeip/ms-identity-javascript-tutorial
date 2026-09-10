@@ -5,7 +5,9 @@
 const request = require('supertest');
 const path = require('path');
 const fs = require('fs');
+const { TextDecoder, TextEncoder } = require('util');
 
+Object.assign(global, { TextDecoder, TextEncoder });
 const app = require('./server.js');
 
 jest.dontMock('fs');
