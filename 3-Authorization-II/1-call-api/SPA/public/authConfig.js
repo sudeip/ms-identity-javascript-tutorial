@@ -5,13 +5,16 @@
  */
 const msalConfig = {
     auth: {
-        clientId: 'Enter_the_Application_Id_Here', // This is the ONLY mandatory field that you need to supply.
-        authority: 'https://login.microsoftonline.com/Enter_the_Tenant_Info_Here', // Replace the placeholder with your tenant name
+        clientId: '7df9ecfb-32cd-4a38-ada0-d796349cac68', // This is the ONLY mandatory field that you need to supply. This is the BlueFlames-AuthWeb app registration.
+        authority: 'https://login.microsoftonline.com/e5d00c4d-eacb-4b8c-bd6e-4e57a780ce5d', // Replace the placeholder with your tenant name
         redirectUri: '/', // You must register this URI on Azure Portal/App Registration. Defaults to window.location.href e.g. http://localhost:3000/,
         postLogoutRedirectUri: '/', // Indicates the page to navigate after logout.
     },
     cache: {
-        cacheLocation: 'sessionStorage', // Configures cache location. "sessionStorage" is more secure, but "localStorage" gives you SSO.
+        // "localStorage" is required (over "sessionStorage") for the BlueFlames app-switcher demo below:
+        // acquireTokenSilent needs to find the cached account/tokens even though Phoenix/Titan
+        // are "different apps" sharing the same AuthWeb MSAL instance.
+        cacheLocation: 'localStorage',
         storeAuthStateInCookie: false, // set this to true if you have to support IE
     },
     system: {
@@ -46,12 +49,22 @@ const msalConfig = {
  * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/resources-and-scopes.md
  */
 const protectedResources = {
-    todolistApi: {
-        endpoint: 'http://localhost:5000/api/todolist',
-        scopes: {
-            read: ['api://Enter_the_Web_Api_Application_Id_Here/Todolist.Read'],
-            write: ['api://Enter_the_Web_Api_Application_Id_Here/Todolist.ReadWrite'],
-        },
+    // ── BlueFlames demo resources ──────────────────────────────────
+    // Each BlueFlames app is its own Entra ID app registration (own audience/scope),
+    // but all are called from the single shared AuthWeb MSAL instance below.
+    graphMe: {
+        endpoint: 'https://graph.microsoft.com/v1.0/me',
+        scopes: ['User.Read'],
+    },
+    phoenixApp: {
+        // Port 5050, not 5000 - macOS AirPlay Receiver squats on 5000 by default.
+        endpoint: 'http://localhost:5050/api/data',
+        scopes: ['api://58d35cac-7505-4ab4-82e0-babaa572cb21/access_as_user'],
+    },
+    titanApp: {
+        // Port 6060, not 6000 - Chrome/Firefox block 6000 outright (old X11 port).
+        endpoint: 'http://localhost:6060/api/data',
+        scopes: ['api://69271258-d8bd-42d0-bed7-7079829e91a2/access_as_user'],
     },
 };
 
@@ -62,7 +75,14 @@ const protectedResources = {
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes
  */
 const loginRequest = {
-    scopes: [...protectedResources.todolistApi.scopes.read, ...protectedResources.todolistApi.scopes.write],
+    scopes: [...protectedResources.graphMe.scopes],
+    // extraScopesToConsent pre-consents the user to the BlueFlames Phoenix and Titan APIs
+    // during the FIRST sign-in, so later switching between apps is a silent
+    // acquireTokenSilent() call — no extra consent prompts. See authWeb.js.
+    extraScopesToConsent: [
+        ...protectedResources.phoenixApp.scopes,
+        ...protectedResources.titanApp.scopes,
+    ],
 };
 
 /**

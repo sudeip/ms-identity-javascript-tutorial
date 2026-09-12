@@ -19,11 +19,6 @@
 <body>
     <nav class="navbar navbar-expand-sm navbar-dark bg-primary navbarStyle">
         <a class="navbar-brand" href="/">Microsoft identity platform</a>
-        <ul class="navbar-nav">
-            <li class="nav-item active">
-                <a class="nav-link d-none" id="toDoListLink" href="#" onclick="getToDos()">todolist</a>
-            </li>
-        </ul>
         <div class="navbar-collapse justify-content-end">
             <button type="button" id="signIn" class="btn btn-secondary" onclick="signIn()">Sign-in</button>
             <button type="button" id="signOut" class="btn btn-success d-none" onclick="signOut()">Sign-out</button>
@@ -34,6 +29,70 @@
     </h5>
     <h5 id="welcome-div" class="card-header text-center d-none"></h5>
     <br>
+    <!-- BlueFlames App Switcher demo: one AuthWeb sign-in, silent token switching across apps -->
+    <div id="blueflames-section" class="blueflames-card d-none">
+        <div id="brand-banner" class="brand-banner brand-blueflames">
+            <span id="brand-icon" class="brand-icon">🔷</span>
+            <span id="brand-name">BlueFlames AuthWeb</span>
+        </div>
+
+        <p class="text-muted">Switch between apps — the token's audience (<code>aud</code>) changes below, but it's the same silent sign-in every time. Check the console for <code>[AuthWeb]</code> logs.</p>
+
+        <div class="app-switcher-buttons">
+            <button type="button" id="phoenix-btn" class="btn btn-primary app-btn" data-app="phoenix">🔥 Open Phoenix App</button>
+            <button type="button" id="titan-btn" class="btn btn-primary app-btn" data-app="titan">🛡️ Open Titan App</button>
+            <button type="button" id="graph-btn" class="btn btn-outline-secondary app-btn" data-app="graph">🧑‍💼 Get My Profile (Graph)</button>
+        </div>
+
+        <div id="active-app-label" class="fw-bold"></div>
+
+        <!-- One tab per app so you can compare tokens side-by-side without losing
+             a previous result when you switch — clicking a button both fetches
+             fresh and jumps to that app's tab; clicking a tab just browses. -->
+        <ul class="nav nav-tabs mt-3" id="app-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="phoenix-tab-btn" data-bs-toggle="tab" data-bs-target="#phoenix-tab-pane" type="button" role="tab" aria-controls="phoenix-tab-pane" aria-selected="true">🔥 Phoenix</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="titan-tab-btn" data-bs-toggle="tab" data-bs-target="#titan-tab-pane" type="button" role="tab" aria-controls="titan-tab-pane" aria-selected="false">🛡️ Titan</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="graph-tab-btn" data-bs-toggle="tab" data-bs-target="#graph-tab-pane" type="button" role="tab" aria-controls="graph-tab-pane" aria-selected="false">🧑‍💼 Graph</button>
+            </li>
+        </ul>
+        <div class="tab-content app-tab-content" id="app-tabs-content">
+            <div class="tab-pane fade show active" id="phoenix-tab-pane" role="tabpanel" aria-labelledby="phoenix-tab-btn">
+                <div class="output-panel">
+                    <h6>API response</h6>
+                    <pre id="phoenix-response">(not requested yet)</pre>
+                </div>
+                <div class="output-panel">
+                    <h6>Access token claims</h6>
+                    <div id="phoenix-claims" class="claims-box text-muted">(not requested yet)</div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="titan-tab-pane" role="tabpanel" aria-labelledby="titan-tab-btn">
+                <div class="output-panel">
+                    <h6>API response</h6>
+                    <pre id="titan-response">(not requested yet)</pre>
+                </div>
+                <div class="output-panel">
+                    <h6>Access token claims</h6>
+                    <div id="titan-claims" class="claims-box text-muted">(not requested yet)</div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="graph-tab-pane" role="tabpanel" aria-labelledby="graph-tab-btn">
+                <div class="output-panel">
+                    <h6>API response</h6>
+                    <pre id="graph-response">(not requested yet)</pre>
+                </div>
+                <div class="output-panel">
+                    <h6>Access token claims</h6>
+                    <div id="graph-claims" class="claims-box text-muted">(not requested yet)</div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="idTokenTable" class="table-responsive-ms" id="table">
         <table id="table-div" class="table table-striped d-none">
             <thead id="table-head-div">
@@ -47,19 +106,7 @@
             </tbody>
         </table>
     </div>
-    <div>
-        <form id="form" class="d-none">
-            <div id="formGroup" class="input-group mb-3">
-                <input id="textInput" type="text" class="form-control" placeholder="Enter a task" aria-label="Enter a task" aria-describedby="button-addon2">
-                <button class="btn btn-primary" type="submit" id="button-addon">Add</button>
-            </div>
-        </form>
-     </div>
-    <div>
-    <div id="groupDiv" class="group-div d-none" >
-        <ul id="toDoListItems" class="list-group">
-        </ul>
-    </div>
+
     <!-- importing bootstrap.js and supporting js libraries -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
@@ -79,5 +126,8 @@
     <!-- uncomment the above line and comment the line below if you would like to use the redirect flow -->
     <!-- <script type="text/javascript" src="./authRedirect.js"></script> -->
     <script type="text/javascript" src="./fetch.js"></script>
+    <!-- BlueFlames App Switcher demo: shared AuthWeb library + switcher UI (needs myMSALObj from authPopup.js and callApi from fetch.js above) -->
+    <script type="text/javascript" src="./authWeb.js"></script>
+    <script type="text/javascript" src="./switcher.js"></script>
 </body>
 </html>

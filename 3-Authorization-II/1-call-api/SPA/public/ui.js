@@ -5,26 +5,18 @@ const titleDiv = document.getElementById('title-div');
 const welcomeDiv = document.getElementById('welcome-div');
 const tableDiv = document.getElementById('table-div');
 const tableBody = document.getElementById('table-body-div');
-const toDoListLink = document.getElementById('toDoListLink');
-const toDoForm = document.getElementById('form');
-const textInput = document.getElementById('textInput');
-const toDoListDiv = document.getElementById('groupDiv');
-const todoListItems = document.getElementById('toDoListItems');
-
-toDoForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    let task = { description: textInput.value };
-    handleToDoListActions(task, 'POST', protectedResources.todolistApi.endpoint);
-    toDoForm.reset();
-});
 
 function welcomeUser(username) {
     signInButton.classList.add('d-none');
     signOutButton.classList.remove('d-none');
-    toDoListLink.classList.remove('d-none');
     titleDiv.classList.add('d-none');
     welcomeDiv.classList.remove('d-none');
     welcomeDiv.innerHTML = `Welcome ${username}!`;
+
+    // Reveal the BlueFlames app switcher demo once signed in (see switcher.js).
+    if (typeof showBlueFlamesSection === 'function') {
+        showBlueFlamesSection();
+    }
 }
 
 function updateTable(account) {
@@ -40,30 +32,4 @@ function updateTable(account) {
         cell2.innerHTML = tokenClaims[key][1];
         cell3.innerHTML = tokenClaims[key][2];
     });
-}
-
-function showToDoListItems(response) {
-    todoListItems.replaceChildren();
-    tableDiv.classList.add('d-none');
-    toDoForm.classList.remove('d-none');
-    toDoListDiv.classList.remove('d-none');
-    if (!!response.length) {
-        response.forEach((task) => {
-            AddTaskToToDoList(task);
-        });
-    }
-}
-
-function AddTaskToToDoList(task) {
-    let li = document.createElement('li');
-    let button = document.createElement('button');
-    button.innerHTML = 'Delete';
-    button.classList.add('btn', 'btn-danger');
-    button.addEventListener('click', () => {
-        handleToDoListActions(task, 'DELETE', protectedResources.todolistApi.endpoint + `/${task.id}`);
-    });
-    li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
-    li.innerHTML = task.description;
-    li.appendChild(button);
-    todoListItems.appendChild(li);
 }

@@ -4,18 +4,114 @@
 
 .table-responsive-ms {
     max-height: 39rem !important;
+    overflow-y: auto; /* was missing: a long claims list spilled past this box instead of scrolling inside it */
     padding-left: 10%;
     padding-right: 10%;
-}
-
-form, .group-div {
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .input-group, ul {
     width: 50% !important;
 }
 
+/* ── BlueFlames App Switcher demo ─────────────────────────────────────── */
+
+.blueflames-card {
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: .75rem;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+}
+
+.brand-banner {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .85rem 1.25rem;
+    border-radius: .5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: #fff;
+    transition: background .25s ease;
+    background: linear-gradient(90deg, #0d6efd, #6610f2); /* default: BlueFlames AuthWeb */
+}
+
+.brand-banner.brand-phoenix { background: linear-gradient(90deg, #d9480f, #f76707); }
+.brand-banner.brand-titan   { background: linear-gradient(90deg, #1864ab, #0c8599); }
+.brand-banner.brand-graph   { background: linear-gradient(90deg, #0ca678, #12b886); }
+.brand-banner.brand-error   { background: linear-gradient(90deg, #c92a2a, #e03131); }
+
+.brand-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.app-switcher-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: 1rem;
+}
+
+.app-btn.active-app-btn {
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, .2) inset;
+    font-weight: 700;
+}
+
+.output-panel {
+    margin-top: .75rem;
+}
+
+.output-panel h6 {
+    margin-bottom: .25rem;
+    color: #6c757d;
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.output-panel pre {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: .4rem;
+    padding: .75rem 1rem;
+    max-height: 14rem;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+    font-size: .85rem;
+}
+
+.output-panel pre.is-error {
+    background: #fff5f5;
+    border-color: #ffc9c9;
+    color: #c92a2a;
+}
+
+.app-tab-content {
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 .4rem .4rem;
+    padding: 1rem;
+    background: #fff;
+}
+
+.claims-box {
+    border: 1px solid #e9ecef;
+    border-radius: .4rem;
+    padding: .5rem .75rem;
+    max-height: 14rem;
+    overflow: auto;
+    background: #fff;
+    font-size: .85rem;
+}
+
+.claims-box table {
+    margin-bottom: 0;
+    font-size: .82rem;
+}
 
