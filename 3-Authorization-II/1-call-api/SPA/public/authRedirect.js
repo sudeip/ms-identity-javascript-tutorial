@@ -5,6 +5,34 @@ const myMSALObj = new msal.PublicClientApplication(msalConfig);
 let username = '';
 
 /**
+ * Network log demo hook (networkLog.js): the authorize/logout redirects
+ * aren't fetch() calls MSAL makes — they're full browser navigations — so
+ * they can't be caught by wrapping fetch(). This custom NavigationClient
+ * captures the exact URL MSAL builds (client_id, scope, redirect_uri,
+ * code_challenge, logout_hint, etc.) right before navigating, then performs
+ * the identical default navigation (window.location.assign/replace) MSAL's
+ * own NavigationClient would have done anyway — behavior is unchanged.
+ */
+if (typeof logNetworkEntry === 'function') {
+    myMSALObj.setNavigationClient({
+        navigateInternal: (url, options) => defaultMsalNavigate(url, options),
+        navigateExternal: (url, options) => {
+            logNetworkEntry({ type: 'redirect', method: 'GET', url });
+            return defaultMsalNavigate(url, options);
+        },
+    });
+}
+
+function defaultMsalNavigate(url, options) {
+    if (options.noHistory) {
+        window.location.replace(url);
+    } else {
+        window.location.assign(url);
+    }
+    return new Promise((resolve) => setTimeout(() => resolve(true), options.timeout));
+}
+
+/**
  * A promise handler needs to be registered for handling the
  * response returned from redirect flow. For more information, visit:
  * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/initialization.md#redirect-apis

@@ -5,8 +5,12 @@
 .table-responsive-ms {
     max-height: 39rem !important;
     overflow-y: auto; /* was missing: a long claims list spilled past this box instead of scrolling inside it */
-    padding-left: 10%;
-    padding-right: 10%;
+    width: 80%;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
 }
 
 .input-group, ul {
@@ -14,14 +18,16 @@
 }
 
 .kiosk-note {
-    max-width: 700px;
+    width: 80%;
+    max-width: 1400px;
     margin: .75rem auto 0;
     padding: 0 1rem;
     font-size: .85rem;
 }
 
 .id-token-raw-panel {
-    max-width: 700px;
+    width: 80%;
+    max-width: 1400px;
     margin: 1rem auto;
     padding: 0 1.5rem;
 }
@@ -43,7 +49,8 @@
 /* ── BlueFlames App Switcher demo ─────────────────────────────────────── */
 
 .blueflames-card {
-    max-width: 700px;
+    width: 80%;
+    max-width: 1400px;
     margin: 2rem auto;
     padding: 1.5rem;
     border: 1px solid #dee2e6;
@@ -137,8 +144,124 @@
     font-size: .85rem;
 }
 
+/* Claim Type / Value / Description tables (both the ID token table and the
+   per-app access token tables): fixed layout so the widths below actually
+   stick, rather than the browser auto-sizing columns to their content
+   (which otherwise gives Value all the room on a long GUID/URI and leaves
+   Description - the column that actually needs it for prose text - squeezed). */
+.claims-table {
+    table-layout: fixed;
+}
+
+.claims-table th:nth-child(1),
+.claims-table td:nth-child(1) {
+    width: 14%;
+}
+
+.claims-table th:nth-child(2),
+.claims-table td:nth-child(2) {
+    width: 24%;
+    word-break: break-word;
+}
+
+.claims-table th:nth-child(3),
+.claims-table td:nth-child(3) {
+    width: 62%;
+}
+
 .claims-box table {
     margin-bottom: 0;
     font-size: .82rem;
+}
+
+/* ── Network Log demo panel ───────────────────────────────────────────── */
+
+.network-log-card {
+    text-align: left;
+    max-height: 28rem;
+    overflow-y: auto;
+}
+
+.network-log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .25rem;
+}
+
+.network-log-entry {
+    border: 1px solid #e9ecef;
+    border-radius: .4rem;
+    margin-bottom: .4rem;
+    padding: .4rem .6rem;
+}
+
+.network-log-entry summary {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    list-style: none;
+}
+
+.network-log-entry summary::-webkit-details-marker {
+    display: none;
+}
+
+.network-log-time {
+    color: #6c757d;
+    font-size: .78rem;
+    min-width: 5.5rem;
+}
+
+.network-log-method {
+    font-family: monospace;
+    font-weight: 700;
+    font-size: .72rem;
+    padding: .1rem .4rem;
+    border-radius: .25rem;
+    color: #fff;
+    background: #6c757d;
+}
+
+.network-log-method.method-GET { background: #0d6efd; }
+.network-log-method.method-POST { background: #d9480f; }
+
+.network-log-label {
+    flex: 1;
+    font-weight: 500;
+}
+
+.network-log-status {
+    font-family: monospace;
+    font-size: .78rem;
+    padding: .1rem .4rem;
+    border-radius: .25rem;
+    background: #e9ecef;
+}
+
+.network-log-status.status-2xx { background: #d3f9d8; color: #2b8a3e; }
+.network-log-status.status-4xx,
+.network-log-status.status-5xx,
+.network-log-status.status-ERROR { background: #ffe3e3; color: #c92a2a; }
+
+.network-log-detail {
+    margin-top: .5rem;
+    padding-top: .5rem;
+    border-top: 1px solid #e9ecef;
+    font-size: .82rem;
+}
+
+.network-log-detail pre {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: .4rem;
+    padding: .5rem .75rem;
+    max-height: 12rem;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: .78rem;
+    margin: .25rem 0 .5rem;
 }
 

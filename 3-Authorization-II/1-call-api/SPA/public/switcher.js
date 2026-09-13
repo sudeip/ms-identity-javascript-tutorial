@@ -83,7 +83,7 @@ function renderClaimsInto(containerEl, payload) {
         })
         .join('');
     containerEl.innerHTML =
-        `<table class="table table-striped table-sm">
+        `<table class="table table-striped table-sm claims-table">
             <thead><tr><th>Claim Type</th><th>Value</th><th>Description</th></tr></thead>
             <tbody>${rows}</tbody>
         </table>`;
@@ -116,7 +116,7 @@ function renderSuccess(app, label, data, tokenPayload, rawToken) {
 
     renderClaimsInto(document.getElementById(`${app}-claims`), tokenPayload);
 
-    document.getElementById(`${app}-token-raw`).textContent = rawToken;
+    document.getElementById(`${app}-token-raw`).textContent = formatJwt(rawToken);
 }
 
 function renderError(app, label, error) {

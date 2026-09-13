@@ -31,6 +31,7 @@
         <strong>Sign-out (End Shift)</strong> clears all browser storage and signs out of Entra ID itself —
         not just this app — so the next person on this tablet never sees a trace of the last session.
     </p>
+
     <br>
     <h5 id="title-div" class="card-header text-center">Vanilla JavaScript single-page application secured with MSAL.js
     </h5>
@@ -78,7 +79,7 @@
                     <div id="phoenix-claims" class="claims-box text-muted">(not requested yet)</div>
                 </div>
                 <div class="output-panel">
-                    <h6>Raw access token (JWT)</h6>
+                    <h6>JWT format (decoded)</h6>
                     <pre id="phoenix-token-raw">(not requested yet)</pre>
                 </div>
             </div>
@@ -92,7 +93,7 @@
                     <div id="titan-claims" class="claims-box text-muted">(not requested yet)</div>
                 </div>
                 <div class="output-panel">
-                    <h6>Raw access token (JWT)</h6>
+                    <h6>JWT format (decoded)</h6>
                     <pre id="titan-token-raw">(not requested yet)</pre>
                 </div>
             </div>
@@ -106,18 +107,18 @@
                     <div id="graph-claims" class="claims-box text-muted">(not requested yet)</div>
                 </div>
                 <div class="output-panel">
-                    <h6>Raw access token (opaque — not a JWT)</h6>
+                    <h6>JWT format (opaque — not decodable)</h6>
                     <pre id="graph-token-raw">(not requested yet)</pre>
                 </div>
             </div>
         </div>
     </div>
     <div class="output-panel id-token-raw-panel">
-        <h6>Raw ID token (JWT)</h6>
+        <h6>JWT format (decoded ID token)</h6>
         <pre id="id-token-raw">(sign in to see this)</pre>
     </div>
     <div id="idTokenTable" class="table-responsive-ms" id="table">
-        <table id="table-div" class="table table-striped d-none">
+        <table id="table-div" class="table table-striped claims-table d-none">
             <thead id="table-head-div">
                 <tr>
                     <th>Claim Type</th>
@@ -128,6 +129,17 @@
             <tbody id="table-body-div">
             </tbody>
         </table>
+    </div>
+
+    <!-- Demo aid: shows the actual requests to Entra ID (authorize/token/logout) and the
+         Phoenix/Titan/Graph APIs, so you don't need DevTools' Network tab to show this live. -->
+    <div class="blueflames-card network-log-card">
+        <div class="network-log-header">
+            <h6 class="mb-0">🌐 Network Log — requests to Entra ID &amp; the APIs</h6>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearNetworkLog()">Clear</button>
+        </div>
+        <p class="text-muted small mb-2">Click a row to expand it — shows the exact query params or POST body sent, and the response received.</p>
+        <div id="network-log-entries"></div>
     </div>
 
     <!-- importing bootstrap.js and supporting js libraries -->
@@ -143,6 +155,10 @@
 
     <!-- importing app scripts (load order is important) -->
     <script type="text/javascript" src="./authConfig.js"></script>
+    <!-- Demo aid: logs requests to Entra ID/the APIs. Needs protectedResources from authConfig.js
+         above; must load before authRedirect.js below, which references logNetworkEntry() directly.
+         Its fetch() wrapper transparently catches MSAL's and fetch.js's calls without them knowing. -->
+    <script type="text/javascript" src="./networkLog.js"></script>
     <script type="text/javascript" src="./ui.js"></script>
     <script type="text/javascript" src="./claimUtils.js"></script>
     <!-- <script type="text/javascript" src="./authPopup.js"></script> -->

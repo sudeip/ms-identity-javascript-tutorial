@@ -4,6 +4,33 @@ const myMSALObj = new msal.PublicClientApplication(msalConfig);
 
 let username = '';
 
+/**
+ * Network log demo hook (networkLog.js): captures the exact logout redirect
+ * URL MSAL builds (this file's signOut() still uses logoutRedirect() even
+ * though sign-in here is a popup), then performs the identical default
+ * navigation MSAL's own NavigationClient would have done anyway — behavior
+ * is unchanged. Note this does NOT capture the login popup itself, since
+ * popups don't go through navigateExternal the way redirects do.
+ */
+if (typeof logNetworkEntry === 'function') {
+    myMSALObj.setNavigationClient({
+        navigateInternal: (url, options) => defaultMsalNavigate(url, options),
+        navigateExternal: (url, options) => {
+            logNetworkEntry({ type: 'redirect', method: 'GET', url });
+            return defaultMsalNavigate(url, options);
+        },
+    });
+}
+
+function defaultMsalNavigate(url, options) {
+    if (options.noHistory) {
+        window.location.replace(url);
+    } else {
+        window.location.assign(url);
+    }
+    return new Promise((resolve) => setTimeout(() => resolve(true), options.timeout));
+}
+
 function selectAccount() {
     /**
      * See here for more info on account retrieval:

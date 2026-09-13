@@ -71,6 +71,42 @@ function base64UrlDecode(base64Url) {
 }
 
 /**
+ * Decodes a JWT into its header and payload objects — the classic "JWT
+ * format" view (as e.g. jwt.ms shows it), not signature-verified (this is a
+ * client-side demo helper, not a security boundary). Works for any JWT, not
+ * just BlueFlames access tokens — also used for the ID token.
+ *
+ * @param {string} token - raw token string
+ * @returns {{header: Object, payload: Object}|null} null if it isn't a decodable JWT
+ *   (e.g. Microsoft Graph's opaque access tokens for public client apps)
+ */
+function decodeJwtParts(token) {
+    try {
+        const [headerSegment, payloadSegment] = token.split('.');
+        return {
+            header: JSON.parse(base64UrlDecode(headerSegment)),
+            payload: JSON.parse(base64UrlDecode(payloadSegment)),
+        };
+    } catch (error) {
+        return null;
+    }
+}
+
+/**
+ * Renders a token's header + payload as the text shown in a "JWT format"
+ * panel, or a note explaining why it can't be shown for an opaque token.
+ * @param {string} token
+ * @returns {string}
+ */
+function formatJwt(token) {
+    const decoded = decodeJwtParts(token);
+    if (!decoded) {
+        return '(Opaque access token — not a decodable JWT; expected for Microsoft Graph on a public client app.)';
+    }
+    return `Header:\n${JSON.stringify(decoded.header, null, 2)}\n\nPayload:\n${JSON.stringify(decoded.payload, null, 2)}`;
+}
+
+/**
  * Decode and log the key claims from an access token.
  * Useful for the demo — shows aud (which app the token is for), scp, and user.
  *

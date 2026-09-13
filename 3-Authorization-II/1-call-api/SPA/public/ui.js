@@ -41,6 +41,6 @@ function updateTable(account, idToken) {
     });
 
     if (idTokenRawEl) {
-        idTokenRawEl.textContent = idToken || '(could not refresh — see console)';
+        idTokenRawEl.textContent = idToken ? formatJwt(idToken) : '(could not refresh — see console)';
     }
 }
