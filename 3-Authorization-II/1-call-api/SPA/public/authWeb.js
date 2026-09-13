@@ -4,7 +4,7 @@
  * Simulates a shared MSAL library used by every BlueFlames app. In production
  * this would be a versioned npm package or CDN-hosted script shared across
  * BlueFlames apps; here it just builds on top of the single `myMSALObj`
- * instance created in authPopup.js so the demo stays self-contained.
+ * instance created in authRedirect.js so the demo stays self-contained.
  *
  * The point being demonstrated: one sign-in (with extraScopesToConsent, see
  * authConfig.js) is enough for every BlueFlames app to silently obtain its
@@ -15,8 +15,18 @@
 /**
  * Central token acquisition for any BlueFlames app.
  * Tries acquireTokenSilent first (cache or hidden iframe refresh) and only
- * falls back to a popup if interaction is actually required (e.g. consent
- * was revoked, or MFA is being stepped up).
+ * falls back to a full-page redirect if interaction is actually required
+ * (e.g. consent was revoked, or MFA is being stepped up). This is a
+ * redirect, not a popup, to match the app's redirect-based login flow —
+ * popups can be unreliable or outright blocked on locked-down kiosk browsers.
+ *
+ * Note: unlike the silent path, the redirect fallback does NOT resolve with
+ * a token here — it navigates the whole page away to Entra ID and back.
+ * On return, handleRedirectPromise() (authRedirect.js) picks up the result;
+ * whatever button click triggered this call will need to be pressed again
+ * once the page reloads signed in. In this demo that path is rare, since
+ * extraScopesToConsent (authConfig.js) pre-consents every app's scope up
+ * front at the initial sign-in.
  *
  * @param {string[]} scopes - the scopes for the target app's API,
  *   e.g. ["api://<phoenix-client-id>/access_as_user"]
@@ -36,10 +46,9 @@ async function getTokenForApp(scopes) {
         return result.accessToken;
     } catch (error) {
         if (error instanceof msal.InteractionRequiredAuthError) {
-            // Silent acquisition failed (e.g. expired session, revoked consent) — fall back to popup.
-            console.warn(`[AuthWeb] Silent acquisition failed, falling back to popup: ${error.message}`);
-            const result = await myMSALObj.acquireTokenPopup(tokenRequest);
-            return result.accessToken;
+            console.warn(`[AuthWeb] Silent acquisition failed, falling back to redirect: ${error.message}`);
+            await myMSALObj.acquireTokenRedirect(tokenRequest); // navigates away; does not return here
+            return;
         }
 
         throw error;

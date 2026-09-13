@@ -11,10 +11,14 @@ const msalConfig = {
         postLogoutRedirectUri: '/', // Indicates the page to navigate after logout.
     },
     cache: {
-        // "localStorage" is required (over "sessionStorage") for the BlueFlames app-switcher demo below:
-        // acquireTokenSilent needs to find the cached account/tokens even though Phoenix/Titan
-        // are "different apps" sharing the same AuthWeb MSAL instance.
-        cacheLocation: 'localStorage',
+        // "sessionStorage", not "localStorage": these BlueFlames apps run on shared
+        // frontline-worker tablets where the browser is reused by many people back
+        // to back. sessionStorage is cleared automatically when the tab/browser
+        // closes, so it can't leak one person's tokens into the next person's
+        // session the way localStorage (which persists indefinitely) could.
+        // It's still enough for the app-switcher demo below, since Phoenix/Titan
+        // are switched via buttons within this same tab.
+        cacheLocation: 'sessionStorage',
         storeAuthStateInCookie: false, // set this to true if you have to support IE
     },
     system: {

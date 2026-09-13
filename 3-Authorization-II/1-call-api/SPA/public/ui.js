@@ -17,6 +17,12 @@ function welcomeUser(username) {
     if (typeof showBlueFlamesSection === 'function') {
         showBlueFlamesSection();
     }
+
+    // Arm the kiosk inactivity auto sign-out now, rather than waiting for
+    // incidental mouse activity to start the clock (see idleLogout.js).
+    if (typeof resetIdleTimers === 'function') {
+        resetIdleTimers();
+    }
 }
 
 function updateTable(account) {

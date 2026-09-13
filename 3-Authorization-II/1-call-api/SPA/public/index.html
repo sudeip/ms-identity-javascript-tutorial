@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Microsoft identity platform</title>
+    <title>My identity platform</title>
     <link rel="SHORTCUT ICON" href="./favicon.svg" type="image/x-icon">
     <link rel="stylesheet" href="./styles.css">
     <!-- msal.min.js can be used in the place of msal.js; included msal.js to make debug easy -->
@@ -18,12 +18,19 @@
 
 <body>
     <nav class="navbar navbar-expand-sm navbar-dark bg-primary navbarStyle">
-        <a class="navbar-brand" href="/">Microsoft identity platform</a>
+        <!-- href intentionally omitted: this is a single-page app, so a real navigation here would
+             re-trigger idleLogout.js's pagehide handler and wipe the session for no reason -->
+        <a class="navbar-brand" href="#" onclick="return false;">My identity platform</a>
         <div class="navbar-collapse justify-content-end">
             <button type="button" id="signIn" class="btn btn-secondary" onclick="signIn()">Sign-in</button>
-            <button type="button" id="signOut" class="btn btn-success d-none" onclick="signOut()">Sign-out</button>
+            <button type="button" id="signOut" class="btn btn-danger d-none" onclick="signOut()">🔒 Sign-out (End Shift)</button>
         </div>
     </nav>
+    <p class="text-center text-muted kiosk-note">
+        Shared-device mode: tokens live in <code>sessionStorage</code> (cleared when the tab closes), and
+        <strong>Sign-out (End Shift)</strong> clears all browser storage and signs out of Entra ID itself —
+        not just this app — so the next person on this tablet never sees a trace of the last session.
+    </p>
     <br>
     <h5 id="title-div" class="card-header text-center">Vanilla JavaScript single-page application secured with MSAL.js
     </h5>
@@ -122,12 +129,14 @@
     <script type="text/javascript" src="./authConfig.js"></script>
     <script type="text/javascript" src="./ui.js"></script>
     <script type="text/javascript" src="./claimUtils.js"></script>
-    <script type="text/javascript" src="./authPopup.js"></script>
-    <!-- uncomment the above line and comment the line below if you would like to use the redirect flow -->
-    <!-- <script type="text/javascript" src="./authRedirect.js"></script> -->
+    <!-- <script type="text/javascript" src="./authPopup.js"></script> -->
+    <!-- using the redirect flow instead of popup: better fit for a kiosk browser, where popups can be unreliable or blocked -->
+    <script type="text/javascript" src="./authRedirect.js"></script>
     <script type="text/javascript" src="./fetch.js"></script>
-    <!-- BlueFlames App Switcher demo: shared AuthWeb library + switcher UI (needs myMSALObj from authPopup.js and callApi from fetch.js above) -->
+    <!-- BlueFlames App Switcher demo: shared AuthWeb library + switcher UI (needs myMSALObj from authRedirect.js and callApi from fetch.js above) -->
     <script type="text/javascript" src="./authWeb.js"></script>
     <script type="text/javascript" src="./switcher.js"></script>
+    <!-- Kiosk hardening: inactivity auto sign-out + best-effort clear on tab close (needs myMSALObj/signOut from authRedirect.js above) -->
+    <script type="text/javascript" src="./idleLogout.js"></script>
 </body>
 </html>

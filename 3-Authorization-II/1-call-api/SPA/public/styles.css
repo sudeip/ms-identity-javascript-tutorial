@@ -13,6 +13,27 @@
     width: 50% !important;
 }
 
+.kiosk-note {
+    max-width: 700px;
+    margin: .75rem auto 0;
+    padding: 0 1rem;
+    font-size: .85rem;
+}
+
+.idle-warning-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2000;
+    background: #f59f00;
+    color: #212529;
+    text-align: center;
+    padding: .6rem 1rem;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .15);
+}
+
 /* ── BlueFlames App Switcher demo ─────────────────────────────────────── */
 
 .blueflames-card {
