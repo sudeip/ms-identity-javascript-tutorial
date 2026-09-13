@@ -30,9 +30,19 @@ function selectAccount() {
         // Add your account choosing logic here
         console.warn('Multiple accounts detected.');
     } else if (currentAccounts.length === 1) {
-        username = currentAccounts[0].username;
+        const account = currentAccounts[0];
+        username = account.username;
         welcomeUser(username);
-        updateTable(currentAccounts[0]);
+
+        // The cached AccountInfo only carries decoded ID token claims, not
+        // the raw JWT string — refresh silently to get a fresh one to show.
+        myMSALObj
+            .acquireTokenSilent({ scopes: ['User.Read'], account })
+            .then((result) => updateTable(result.account, result.idToken))
+            .catch((error) => {
+                console.warn('Could not refresh ID token for display:', error);
+                updateTable(account, null);
+            });
     }
 }
 
@@ -45,7 +55,7 @@ function handleResponse(response) {
     if (response !== null) {
         username = response.account.username;
         welcomeUser(username);
-        updateTable(response.account);
+        updateTable(response.account, response.idToken);
     } else {
         selectAccount();
     }

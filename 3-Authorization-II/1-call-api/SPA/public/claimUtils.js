@@ -8,8 +8,54 @@ const createClaimsTable = (claims) => {
     let index = 0;
 
     Object.keys(claims).forEach((key) => {
-        if (typeof claims[key] !== 'string' && typeof claims[key] !== 'number') return;
+        // Some claims (app roles, group membership) are arrays, not a single
+        // string/number - without this they'd be silently dropped from the
+        // table entirely. Join them into a readable comma-separated string.
+        if (typeof claims[key] !== 'string' && typeof claims[key] !== 'number' && !Array.isArray(claims[key])) return;
+        if (Array.isArray(claims[key])) {
+            claims[key] = claims[key].join(', ');
+        }
         switch (key) {
+            case 'roles':
+                populateClaim(
+                    key,
+                    claims[key],
+                    "The app roles this user (or, for app-only tokens, this application) has been assigned for this app registration — configured under 'App roles' and assigned via Enterprise Applications > Users and groups.",
+                    index,
+                    claimsObj
+                );
+                index++;
+                break;
+            case 'groups':
+                populateClaim(
+                    key,
+                    claims[key],
+                    "The Azure AD security group object IDs this user belongs to. Overage scenarios (too many groups to fit in the token) instead return a 'hasgroups' claim or a groups overage indicator — group membership must then be looked up via the Microsoft Graph API.",
+                    index,
+                    claimsObj
+                );
+                index++;
+                break;
+            case 'wids':
+                populateClaim(
+                    key,
+                    claims[key],
+                    'Directory role template IDs (built-in Azure AD admin roles, e.g. Global Administrator) assigned to this user — distinct from app roles, which are app-specific.',
+                    index,
+                    claimsObj
+                );
+                index++;
+                break;
+            case 'scp':
+                populateClaim(
+                    key,
+                    claims[key],
+                    'The delegated permissions (scopes) this access token was granted, space-separated. Present on access tokens issued to a signed-in user; app-only tokens have roles instead.',
+                    index,
+                    claimsObj
+                );
+                index++;
+                break;
             case 'aud':
                 populateClaim(
                     key,

@@ -102,9 +102,11 @@ function renderLoading(app, label) {
     const claimsEl = document.getElementById(`${app}-claims`);
     claimsEl.classList.add('text-muted');
     claimsEl.textContent = 'Loading…';
+
+    document.getElementById(`${app}-token-raw`).textContent = 'Loading…';
 }
 
-function renderSuccess(app, label, data, tokenPayload) {
+function renderSuccess(app, label, data, tokenPayload, rawToken) {
     setBrand(app);
     activeAppLabel.textContent = `Active: ${label}`;
 
@@ -113,6 +115,8 @@ function renderSuccess(app, label, data, tokenPayload) {
     responseEl.textContent = JSON.stringify(data, null, 2);
 
     renderClaimsInto(document.getElementById(`${app}-claims`), tokenPayload);
+
+    document.getElementById(`${app}-token-raw`).textContent = rawToken;
 }
 
 function renderError(app, label, error) {
@@ -126,6 +130,8 @@ function renderError(app, label, error) {
     const claimsEl = document.getElementById(`${app}-claims`);
     claimsEl.classList.add('text-muted');
     claimsEl.textContent = '(no token acquired)';
+
+    document.getElementById(`${app}-token-raw`).textContent = '(no token acquired)';
 }
 
 /**
@@ -145,7 +151,7 @@ async function callBlueFlamesApp(app) {
         const data = await callApi('GET', resource.endpoint, token);
 
         if (seq !== requestSeq) return; // a newer click already superseded this one
-        renderSuccess(app, label, data, payload);
+        renderSuccess(app, label, data, payload, token);
     } catch (error) {
         console.error(error);
         if (seq !== requestSeq) return;

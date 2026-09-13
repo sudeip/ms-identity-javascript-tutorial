@@ -5,6 +5,7 @@ const titleDiv = document.getElementById('title-div');
 const welcomeDiv = document.getElementById('welcome-div');
 const tableDiv = document.getElementById('table-div');
 const tableBody = document.getElementById('table-body-div');
+const idTokenRawEl = document.getElementById('id-token-raw');
 
 function welcomeUser(username) {
     signInButton.classList.add('d-none');
@@ -25,7 +26,7 @@ function welcomeUser(username) {
     }
 }
 
-function updateTable(account) {
+function updateTable(account, idToken) {
     tableDiv.classList.remove('d-none');
     const tokenClaims = createClaimsTable(account.idTokenClaims);
 
@@ -38,4 +39,8 @@ function updateTable(account) {
         cell2.innerHTML = tokenClaims[key][1];
         cell3.innerHTML = tokenClaims[key][2];
     });
+
+    if (idTokenRawEl) {
+        idTokenRawEl.textContent = idToken || '(could not refresh — see console)';
+    }
 }

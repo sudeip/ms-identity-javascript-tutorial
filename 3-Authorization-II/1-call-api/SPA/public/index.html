@@ -77,6 +77,10 @@
                     <h6>Access token claims</h6>
                     <div id="phoenix-claims" class="claims-box text-muted">(not requested yet)</div>
                 </div>
+                <div class="output-panel">
+                    <h6>Raw access token (JWT)</h6>
+                    <pre id="phoenix-token-raw">(not requested yet)</pre>
+                </div>
             </div>
             <div class="tab-pane fade" id="titan-tab-pane" role="tabpanel" aria-labelledby="titan-tab-btn">
                 <div class="output-panel">
@@ -86,6 +90,10 @@
                 <div class="output-panel">
                     <h6>Access token claims</h6>
                     <div id="titan-claims" class="claims-box text-muted">(not requested yet)</div>
+                </div>
+                <div class="output-panel">
+                    <h6>Raw access token (JWT)</h6>
+                    <pre id="titan-token-raw">(not requested yet)</pre>
                 </div>
             </div>
             <div class="tab-pane fade" id="graph-tab-pane" role="tabpanel" aria-labelledby="graph-tab-btn">
@@ -97,8 +105,16 @@
                     <h6>Access token claims</h6>
                     <div id="graph-claims" class="claims-box text-muted">(not requested yet)</div>
                 </div>
+                <div class="output-panel">
+                    <h6>Raw access token (opaque — not a JWT)</h6>
+                    <pre id="graph-token-raw">(not requested yet)</pre>
+                </div>
             </div>
         </div>
+    </div>
+    <div class="output-panel id-token-raw-panel">
+        <h6>Raw ID token (JWT)</h6>
+        <pre id="id-token-raw">(sign in to see this)</pre>
     </div>
     <div id="idTokenTable" class="table-responsive-ms" id="table">
         <table id="table-div" class="table table-striped d-none">

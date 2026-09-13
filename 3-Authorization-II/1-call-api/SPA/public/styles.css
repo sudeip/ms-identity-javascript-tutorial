@@ -20,6 +20,12 @@
     font-size: .85rem;
 }
 
+.id-token-raw-panel {
+    max-width: 700px;
+    margin: 1rem auto;
+    padding: 0 1.5rem;
+}
+
 .idle-warning-banner {
     position: fixed;
     top: 0;
