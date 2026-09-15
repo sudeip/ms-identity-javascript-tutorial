@@ -1,0 +1,53 @@
+// Select DOM elements to work with
+const signInButton = document.getElementById('signIn');
+const signOutButton = document.getElementById('signOut');
+const titleDiv = document.getElementById('title-div');
+const welcomeDiv = document.getElementById('welcome-div');
+const tableDiv = document.getElementById('table-div');
+const tableBody = document.getElementById('table-body-div');
+const idTokenRawEl = document.getElementById('id-token-raw');
+
+function welcomeUser(username) {
+    signInButton.classList.add('d-none');
+    signOutButton.classList.remove('d-none');
+    titleDiv.classList.add('d-none');
+    welcomeDiv.classList.remove('d-none');
+    welcomeDiv.innerHTML = `Welcome ${username}!`;
+
+    // Reveal the BlueFlames app switcher demo once signed in (see switcher.js).
+    if (typeof showBlueFlamesSection === 'function') {
+        showBlueFlamesSection();
+    }
+
+    // Arm the kiosk inactivity auto sign-out now, rather than waiting for
+    // incidental mouse activity to start the clock (see idleLogout.js).
+    if (typeof resetIdleTimers === 'function') {
+        resetIdleTimers();
+    }
+
+    // Auto-fetch this app's own API data immediately on sign-in — including a
+    // silent cross-app sign-in when switching apps — instead of waiting for a
+    // manual "Get ... Data" button click (see switcher.js).
+    if (typeof callBlueFlamesApp === 'function') {
+        callBlueFlamesApp('own');
+    }
+}
+
+function updateTable(account, idToken) {
+    tableDiv.classList.remove('d-none');
+    const tokenClaims = createClaimsTable(account.idTokenClaims);
+
+    Object.keys(tokenClaims).forEach((key) => {
+        let row = tableBody.insertRow(0);
+        let cell1 = row.insertCell(0);
+        let cell2 = row.insertCell(1);
+        let cell3 = row.insertCell(2);
+        cell1.innerHTML = tokenClaims[key][0];
+        cell2.innerHTML = tokenClaims[key][1];
+        cell3.innerHTML = tokenClaims[key][2];
+    });
+
+    if (idTokenRawEl) {
+        idTokenRawEl.textContent = idToken ? formatJwt(idToken) : '(could not refresh — see console)';
+    }
+}

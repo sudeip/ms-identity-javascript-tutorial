@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>BlueFlames App</title>
+    <link rel="SHORTCUT ICON" href="./favicon.svg" type="image/x-icon">
+    <link rel="stylesheet" href="./styles.css">
+    <!-- msal.min.js can be used in the place of msal.js; included msal.js to make debug easy -->
+    <script id="load-msal" src="https://alcdn.msauth.net/browser/2.31.0/js/msal-browser.js"
+        integrity="sha384-BO4qQ2RTxj2akCJc7t6IdU9aRg6do4LGIkVVa01Hm33jxM+v2G+4q+vZjmOCywYq"
+        crossorigin="anonymous"></script>
+    <!-- adding Bootstrap 5 for UI components  -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+</head>
+
+<body>
+    <!--
+        This entire page is IDENTICAL across every BlueFlames UI app (Titan-UI,
+        Phoenix-UI, Falcon-UI, ...) — nothing here hardcodes an app's name, icon,
+        color, or port. apps.js (loaded below) supplies all of that per-app, and
+        ui-identity.js applies it to the elements below on load. To add/rename/
+        recolor an app, edit apps.js's registry — this file never needs touching.
+    -->
+    <!-- bg-primary intentionally omitted: this app's own color (apps.js) is applied by
+         ui-identity.js instead, so this bar — the very first thing visible, even before
+         sign-in — already matches Titan/Phoenix/Falcon/... rather than always being blue. -->
+    <nav class="navbar navbar-expand-sm navbar-dark navbarStyle" id="app-navbar">
+        <!-- href intentionally omitted: this is a single-page app, so a real navigation here would
+             re-trigger idleLogout.js's pagehide handler and wipe the session for no reason -->
+        <a class="navbar-brand" href="#" onclick="return false;" id="app-navbar-brand"></a>
+        <div class="navbar-collapse justify-content-end">
+            <span id="cross-app-links"></span>
+            <button type="button" id="signIn" class="btn btn-secondary" onclick="signIn()">Sign-in</button>
+            <button type="button" id="signOut" class="btn btn-danger d-none" onclick="signOut()">🔒 Sign-out (End Shift)</button>
+        </div>
+    </nav>
+    <p class="text-center text-muted kiosk-note" id="kiosk-note"></p>
+
+    <br>
+    <h5 id="title-div" class="card-header text-center"></h5>
+    <h5 id="welcome-div" class="card-header text-center d-none"></h5>
+    <br>
+    <!-- Cross-app SSO demo: sign in here, then open another app — it should sign you in silently (see authRedirect.js) -->
+    <div id="blueflames-section" class="blueflames-card d-none">
+        <div id="brand-banner" class="brand-banner">
+            <span id="brand-icon" class="brand-icon"></span>
+            <span id="brand-name"></span>
+        </div>
+
+        <p class="text-muted">Get data from this app's own API, or your Microsoft Graph profile — both use the same signed-in session. Check the console for <code>[AuthWeb]</code> logs.</p>
+
+        <div class="app-switcher-buttons">
+            <button type="button" id="own-btn" class="btn btn-primary app-btn" data-app="own"></button>
+            <button type="button" id="graph-btn" class="btn btn-outline-secondary app-btn" data-app="graph">🧑‍💼 Get My Profile (Graph)</button>
+        </div>
+
+        <div id="active-app-label" class="fw-bold"></div>
+
+        <ul class="nav nav-tabs mt-3" id="app-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="own-tab-btn" data-bs-toggle="tab" data-bs-target="#own-tab-pane" type="button" role="tab" aria-controls="own-tab-pane" aria-selected="true"></button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="graph-tab-btn" data-bs-toggle="tab" data-bs-target="#graph-tab-pane" type="button" role="tab" aria-controls="graph-tab-pane" aria-selected="false">🧑‍💼 Graph</button>
+            </li>
+        </ul>
+        <div class="tab-content app-tab-content" id="app-tabs-content">
+            <div class="tab-pane fade show active" id="own-tab-pane" role="tabpanel" aria-labelledby="own-tab-btn">
+                <div class="output-panel">
+                    <h6>API response</h6>
+                    <pre id="own-response">(not requested yet)</pre>
+                </div>
+                <div class="output-panel">
+                    <h6>JWT format (decoded)</h6>
+                    <pre id="own-token-raw">(not requested yet)</pre>
+                </div>
+                <details class="claims-details">
+                    <summary>Access token claims (table)</summary>
+                    <div id="own-claims" class="claims-box text-muted">(not requested yet)</div>
+                </details>
+            </div>
+            <div class="tab-pane fade" id="graph-tab-pane" role="tabpanel" aria-labelledby="graph-tab-btn">
+                <div class="output-panel">
+                    <h6>API response</h6>
+                    <pre id="graph-response">(not requested yet)</pre>
+                </div>
+                <div class="output-panel">
+                    <h6>JWT format (opaque — not decodable)</h6>
+                    <pre id="graph-token-raw">(not requested yet)</pre>
+                </div>
+                <details class="claims-details">
+                    <summary>Access token claims (table)</summary>
+                    <div id="graph-claims" class="claims-box text-muted">(not requested yet)</div>
+                </details>
+            </div>
+        </div>
+    </div>
+    <div class="output-panel id-token-raw-panel">
+        <h6>JWT format (decoded ID token)</h6>
+        <pre id="id-token-raw">(sign in to see this)</pre>
+    </div>
+    <details class="id-token-raw-panel claims-details">
+        <summary>ID token claims (table)</summary>
+        <div id="idTokenTable" class="table-responsive-ms" id="table">
+            <table id="table-div" class="table table-striped claims-table d-none">
+                <thead id="table-head-div">
+                    <tr>
+                        <th>Claim Type</th>
+                        <th>Value</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body-div">
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    <!-- Demo aid: shows the actual requests to Entra ID (authorize/token/logout) and this app's own
+         API, so you don't need DevTools' Network tab to show this live. -->
+    <div class="blueflames-card network-log-card">
+        <div class="network-log-header">
+            <h6 class="mb-0">🌐 Network Log — requests to Entra ID &amp; the API</h6>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearNetworkLog()">Clear</button>
+        </div>
+        <p class="text-muted small mb-2">Click a row to expand it — shows the exact query params or POST body sent, and the response received.</p>
+        <div id="network-log-entries"></div>
+    </div>
+
+    <!-- importing bootstrap.js and supporting js libraries -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
+        </script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+        integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+        crossorigin="anonymous"></script>
+
+    <!-- importing app scripts (load order is important) -->
+    <!-- App identity registry: which app am I, what are my siblings called/colored/ported.
+         Loaded first since authConfig.js and ui-identity.js both read from it. -->
+    <script type="text/javascript" src="./apps.js"></script>
+    <script type="text/javascript" src="./authConfig.js"></script>
+    <!-- Demo aid: logs requests to Entra ID/the API. Needs protectedResources from authConfig.js
+         above; must load before authRedirect.js below, which references logNetworkEntry() directly.
+         Its fetch() wrapper transparently catches MSAL's and fetch.js's calls without them knowing. -->
+    <script type="text/javascript" src="./networkLog.js"></script>
+    <script type="text/javascript" src="./ui.js"></script>
+    <script type="text/javascript" src="./claimUtils.js"></script>
+    <!-- <script type="text/javascript" src="./authPopup.js"></script> -->
+    <!-- using the redirect flow instead of popup: better fit for a kiosk browser, where popups can be unreliable or blocked -->
+    <script type="text/javascript" src="./authRedirect.js"></script>
+    <script type="text/javascript" src="./fetch.js"></script>
+    <!-- AuthWeb shared library + switcher UI (needs myMSALObj from authRedirect.js and callApi from fetch.js above) -->
+    <script type="text/javascript" src="./authWeb.js"></script>
+    <script type="text/javascript" src="./switcher.js"></script>
+    <!-- Applies apps.js's identity (name/icon/color, cross-app links) to the page. Runs after
+         switcher.js since it reuses switcher.js's setBrand()/showBlueFlamesSection(). -->
+    <script type="text/javascript" src="./ui-identity.js"></script>
+    <!-- Kiosk hardening: inactivity auto sign-out + best-effort clear on tab close (needs myMSALObj/signOut from authRedirect.js above) -->
+    <script type="text/javascript" src="./idleLogout.js"></script>
+</body>
+</html>

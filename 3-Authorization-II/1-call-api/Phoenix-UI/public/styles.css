@@ -1,0 +1,285 @@
+.navbarStyle {
+    padding: .5rem 1rem !important;
+}
+
+.table-responsive-ms {
+    max-height: 39rem !important;
+    overflow-y: auto; /* was missing: a long claims list spilled past this box instead of scrolling inside it */
+    width: 80%;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.input-group, ul {
+    width: 50% !important;
+}
+
+.kiosk-note {
+    width: 80%;
+    max-width: 1400px;
+    margin: .75rem auto 0;
+    padding: 0 1rem;
+    font-size: .85rem;
+}
+
+.id-token-raw-panel {
+    width: 80%;
+    max-width: 1400px;
+    margin: 1rem auto;
+    padding: 0 1.5rem;
+}
+
+.idle-warning-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2000;
+    background: #f59f00;
+    color: #212529;
+    text-align: center;
+    padding: .6rem 1rem;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .15);
+}
+
+/* ── BlueFlames App Switcher demo ─────────────────────────────────────── */
+
+.blueflames-card {
+    width: 80%;
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: .75rem;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+}
+
+.brand-banner {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .85rem 1.25rem;
+    border-radius: .5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: #fff;
+    transition: background .25s ease;
+    background: linear-gradient(90deg, #0d6efd, #6610f2); /* default: BlueFlames AuthWeb */
+}
+
+.brand-banner.brand-phoenix { background: linear-gradient(90deg, #d9480f, #f76707); }
+.brand-banner.brand-titan   { background: linear-gradient(90deg, #1864ab, #0c8599); }
+.brand-banner.brand-graph   { background: linear-gradient(90deg, #0ca678, #12b886); }
+.brand-banner.brand-error   { background: linear-gradient(90deg, #c92a2a, #e03131); }
+
+.brand-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.app-switcher-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: 1rem;
+}
+
+.app-btn.active-app-btn {
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, .2) inset;
+    font-weight: 700;
+}
+
+.output-panel {
+    margin-top: .75rem;
+}
+
+.output-panel h6 {
+    margin-bottom: .25rem;
+    color: #6c757d;
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.output-panel pre {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: .4rem;
+    padding: .75rem 1rem;
+    max-height: 14rem;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+    font-size: .85rem;
+}
+
+.output-panel pre.is-error {
+    background: #fff5f5;
+    border-color: #ffc9c9;
+    color: #c92a2a;
+}
+
+.app-tab-content {
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 .4rem .4rem;
+    padding: 1rem;
+    background: #fff;
+}
+
+/* Collapsed by default — the decoded JWT above is the primary view; these
+   claims tables are still one click away, not removed. */
+.claims-details {
+    margin-top: .75rem;
+}
+
+.claims-details summary {
+    cursor: pointer;
+    color: #6c757d;
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.claims-details[open] summary {
+    margin-bottom: .5rem;
+}
+
+.claims-box {
+    border: 1px solid #e9ecef;
+    border-radius: .4rem;
+    padding: .5rem .75rem;
+    max-height: 14rem;
+    overflow: auto;
+    background: #fff;
+    font-size: .85rem;
+}
+
+/* Claim Type / Value / Description tables (both the ID token table and the
+   per-app access token tables): fixed layout so the widths below actually
+   stick, rather than the browser auto-sizing columns to their content
+   (which otherwise gives Value all the room on a long GUID/URI and leaves
+   Description - the column that actually needs it for prose text - squeezed). */
+.claims-table {
+    table-layout: fixed;
+}
+
+.claims-table th:nth-child(1),
+.claims-table td:nth-child(1) {
+    width: 14%;
+}
+
+.claims-table th:nth-child(2),
+.claims-table td:nth-child(2) {
+    width: 24%;
+    word-break: break-word;
+}
+
+.claims-table th:nth-child(3),
+.claims-table td:nth-child(3) {
+    width: 62%;
+}
+
+.claims-box table {
+    margin-bottom: 0;
+    font-size: .82rem;
+}
+
+/* ── Network Log demo panel ───────────────────────────────────────────── */
+
+.network-log-card {
+    text-align: left;
+    max-height: 28rem;
+    overflow-y: auto;
+}
+
+.network-log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .25rem;
+}
+
+.network-log-entry {
+    border: 1px solid #e9ecef;
+    border-radius: .4rem;
+    margin-bottom: .4rem;
+    padding: .4rem .6rem;
+}
+
+.network-log-entry summary {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    list-style: none;
+}
+
+.network-log-entry summary::-webkit-details-marker {
+    display: none;
+}
+
+.network-log-time {
+    color: #6c757d;
+    font-size: .78rem;
+    min-width: 5.5rem;
+}
+
+.network-log-method {
+    font-family: monospace;
+    font-weight: 700;
+    font-size: .72rem;
+    padding: .1rem .4rem;
+    border-radius: .25rem;
+    color: #fff;
+    background: #6c757d;
+}
+
+.network-log-method.method-GET { background: #0d6efd; }
+.network-log-method.method-POST { background: #d9480f; }
+
+.network-log-label {
+    flex: 1;
+    font-weight: 500;
+}
+
+.network-log-status {
+    font-family: monospace;
+    font-size: .78rem;
+    padding: .1rem .4rem;
+    border-radius: .25rem;
+    background: #e9ecef;
+}
+
+.network-log-status.status-2xx { background: #d3f9d8; color: #2b8a3e; }
+.network-log-status.status-4xx,
+.network-log-status.status-5xx,
+.network-log-status.status-ERROR { background: #ffe3e3; color: #c92a2a; }
+
+.network-log-detail {
+    margin-top: .5rem;
+    padding-top: .5rem;
+    border-top: 1px solid #e9ecef;
+    font-size: .82rem;
+}
+
+.network-log-detail pre {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: .4rem;
+    padding: .5rem .75rem;
+    max-height: 12rem;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: .78rem;
+    margin: .25rem 0 .5rem;
+}
+

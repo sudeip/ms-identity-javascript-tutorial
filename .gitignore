@@ -108,3 +108,6 @@ dist
 
 # VS Code Cache
 .vscode/
+
+# BlueFlames demo planning doc (local scratch, not part of the sample)
+3-Authorization-II/1-call-api/blueflames_demo_plan.md
