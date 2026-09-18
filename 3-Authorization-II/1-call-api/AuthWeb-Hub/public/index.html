@@ -35,10 +35,9 @@
     <p class="text-center text-muted kiosk-note">
         AuthWeb Hub is the only BlueFlames app with real Entra ID configuration — one client ID, one tenant, one map of
         which spoke app needs which scope (<code>authConfig.js</code>). Titan, Phoenix and Falcon hold none of that
-        themselves; they pass their small app id here and get a token back. Tokens live in <code>localStorage</code>
-        here only, shared by every tab open on this origin — <strong>Sign-out (End Shift)</strong> clears this session and
-        signs out of Entra ID itself, which every spoke's own sign-out also routes through. Only an explicit sign-out (or
-        the spokes' idle timeout) clears it — closing a tab alone does not.
+        themselves; they pass their small app id here and get a token back. Tokens live in <code>sessionStorage</code>
+        here only, cleared the moment a tab closes — <strong>Sign-out (End Shift)</strong> clears this session and signs
+        out of Entra ID itself, which every spoke's own sign-out also routes through.
     </p>
 
     <div id="broker-note" class="broker-note d-none"></div>

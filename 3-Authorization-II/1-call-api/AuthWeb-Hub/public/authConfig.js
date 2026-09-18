@@ -22,24 +22,25 @@ const msalConfig = {
         postLogoutRedirectUri: '/',
     },
     cache: {
-        // localStorage, not sessionStorage: workers routinely have this tablet's
-        // browser open to more than one tab/app at once, and sessionStorage is
-        // scoped per TAB, not just per origin — two tabs on AuthWeb's own
-        // origin would otherwise each think they're the only session. With
-        // localStorage every tab on this origin shares one cache, and a
-        // 'storage' event (see authRedirect.js) lets a sign-out in one tab be
-        // reflected in another immediately.
+        // sessionStorage: shared frontline-worker tablets, browser reused by
+        // many people back to back — this gets wiped the moment a tab
+        // closes, so a person who forgets to hit Sign-out at least can't hand
+        // the next person a session just by leaving a tab open indefinitely.
+        // (localStorage would persist across a tab close, or even a full
+        // browser restart if "reopen previous tabs" is on — worse for this
+        // scenario, even though it'd make multi-tab sharing more seamless.)
         //
-        // The trade-off, carried over from the earlier per-spoke design's
-        // reasoning: unlike sessionStorage, this does NOT get wiped just
-        // because a tab is closed — only an explicit Sign-out (or the idle
-        // auto sign-out) clears it. On a genuinely shared kiosk tablet, closing
-        // a tab without signing out would still leave the next person able to
-        // reuse the session from a fresh tab. Mitigated here by the idle
-        // auto-logout (idleLogout.js) and the kiosk-note reminder, not
-        // eliminated outright — a deliberate trade against the alternative of
-        // fresh-tab users having to sign in again despite an active session.
-        cacheLocation: 'localStorage',
+        // Trade-off: each tab gets its OWN cache, even two tabs on AuthWeb's
+        // own origin — so a brand-new tab always makes at least one round
+        // trip here to re-establish itself. That round trip is still silent
+        // as long as Entra ID's own session cookie is alive (SSO doesn't
+        // depend on this setting at all — see the demo plan's notes on that).
+        // The real, reliable way a sign-out reaches every open tab is still
+        // the Sign-out button (logoutRedirect, killing that cookie) and the
+        // idle auto-logout (idleLogout.js) — not this cache setting, and not
+        // "close the whole browser", which a page can't force and isn't
+        // guaranteed to wipe this anyway if tab-restore is on.
+        cacheLocation: 'sessionStorage',
         storeAuthStateInCookie: false, // set this to true if you have to support IE
     },
     system: {

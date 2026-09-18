@@ -17,11 +17,11 @@ document.getElementById('kiosk-note').innerHTML =
     `${THIS_APP.name} is a genuinely independent app on its own origin (<code>localhost:${THIS_APP.port}</code>) — ` +
     `it holds no Entra ID configuration of its own at all, only its small app id (<code>${THIS_APP.id}</code>). Every ` +
     `token comes from <a href="${AUTHWEB_HUB_URL}/" target="_blank">AuthWeb Hub</a>, which owns the one app ` +
-    `registration and every BlueFlames app's scope. This app's own copy of a token lives in <code>localStorage</code>, ` +
-    `shared by every ${THIS_APP.name} tab open on this device — sign out in one and the others notice immediately, ` +
-    `no reload needed. <strong>Sign-out (End Shift)</strong> routes through AuthWeb to clear its session and sign out of ` +
-    `Entra ID itself, not just this tab's copy — but only an explicit sign-out (or the idle timeout below) does that; ` +
-    `just closing a tab leaves the session usable from a fresh one, so don't skip End Shift on a shared tablet.`;
+    `registration and every BlueFlames app's scope. This app's own copy of a token lives in <code>sessionStorage</code> ` +
+    `(cleared the moment a tab closes — no lingering session for the next person on this tablet). If ${THIS_APP.name} ` +
+    `is open in two tabs at once, signing out of one clears the other immediately too, via a live same-app signal — not ` +
+    `by sharing storage. <strong>Sign-out (End Shift)</strong> routes through AuthWeb to clear its session and sign out ` +
+    `of Entra ID itself, not just this tab's copy.`;
 
 // One "Open <App> App" link per sibling, inserted before the Sign-in button.
 const crossAppLinksEl = document.getElementById('cross-app-links');

@@ -91,6 +91,7 @@ function signOut() {
      * the session everywhere — no spoke needs (or is able) to do its own
      * separate sign-out against Entra ID.
      */
+    broadcastAuthWebSignedOut(); // see below — tells any sibling AuthWeb tab before this one navigates away
     const account = myMSALObj.getAllAccounts()[0];
     myMSALObj.logoutRedirect({
         account,
@@ -100,15 +101,36 @@ function signOut() {
 }
 
 /**
- * Cross-tab reactivity: the 'storage' event fires in every OTHER tab of this
- * SAME origin (never the tab that made the change) whenever localStorage
- * changes — so if AuthWeb Hub happens to be open directly in two tabs and one
- * of them signs in/out, the other's landing page updates immediately, without
- * needing a reload. This can't reach a spoke's own tab (Titan-UI/Phoenix-UI/
- * Falcon-UI are different origins — see their spoke.js for the matching
- * listener over their own localStorage) — only tabs on AuthWeb's own origin.
+ * Cross-tab reactivity via BroadcastChannel, not the 'storage' event: with
+ * sessionStorage (see authConfig.js), each tab's cache is its own — a
+ * 'storage' event never fires between separate tabs for sessionStorage, only
+ * for localStorage. BroadcastChannel is a plain live pub/sub signal between
+ * browsing contexts of the SAME origin, independent of storage type, so it's
+ * used here purely as a "sign-out just happened" notice — no session data
+ * rides along, sibling tabs just re-check their own (now-empty) account list.
+ * Only reaches tabs on AuthWeb's OWN origin — a spoke's tab is a different
+ * origin entirely and has its own separate channel (see its spoke.js).
  */
-window.addEventListener('storage', (event) => {
-    if (!event.key || !event.key.startsWith('msal.')) return; // ignore unrelated keys (e.g. the network log)
-    renderHubLanding({ account: myMSALObj.getAllAccounts()[0] });
-});
+const authWebChannel = 'BroadcastChannel' in window ? new BroadcastChannel('blueflames-authweb') : null;
+
+function broadcastAuthWebSignedOut() {
+    if (authWebChannel) authWebChannel.postMessage({ type: 'signed-out' });
+}
+
+if (authWebChannel) {
+    authWebChannel.onmessage = (event) => {
+        if (event.data && event.data.type !== 'signed-out') return;
+
+        // This tab's OWN sessionStorage is untouched by the OTHER tab's
+        // sign-out (that's the whole reason sessionStorage needs this
+        // broadcast at all) — it may still show a cached account. Re-running
+        // the real sign-out here (rather than just re-rendering) actually
+        // clears THIS tab's cache too, via the same proven logoutRedirect()
+        // path, instead of reaching into MSAL's internal storage format by
+        // hand. Entra ID's session is already gone, so this completes fast
+        // with no visible login form either way.
+        if (myMSALObj.getAllAccounts().length > 0) {
+            signOut();
+        }
+    };
+}

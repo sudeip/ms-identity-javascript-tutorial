@@ -11,33 +11,38 @@
  * ...) — never sent to any server, never logged, gone from the address bar
  * the instant this script reads it.
  *
- * A short-lived copy is kept in localStorage — shared by every tab of THIS
- * spoke's own origin, not just the current tab — purely so a click/re-render
- * doesn't force a fresh round trip to AuthWeb every time. AuthWeb's own cache
- * remains the real source of truth for whether the user is actually signed
- * in; this is a local speed-up, kept in sync across this app's own tabs via
- * the 'storage' event listener at the bottom of this file (a sibling TAB of
- * a DIFFERENT spoke app can't be reached this way — different origin — see
- * the demo plan's notes on that limitation).
+ * A short-lived copy is kept in THIS tab's own sessionStorage — cleared the
+ * moment the tab closes, so a shared kiosk tablet can't hand a still-cached
+ * token to the next person just because a tab was left open. AuthWeb's own
+ * cache remains the real source of truth for whether the user is actually
+ * signed in; this is purely a local speed-up so a click/re-render doesn't
+ * force a fresh round trip every time.
+ *
+ * Because sessionStorage isn't shared between tabs, two tabs of THIS SAME
+ * spoke app are otherwise unaware of each other — signOutOfSpoke() below
+ * also broadcasts over a BroadcastChannel so a sibling tab clears itself
+ * immediately too, instead of carrying on with a technically-still-valid
+ * token until it naturally expires. That channel is per-origin like every
+ * other browser API here, so it can't reach a DIFFERENT spoke's tab
+ * (Titan-UI vs. Phoenix-UI) — that gap is accepted, not fixed: the other
+ * spoke's tab still discovers the real sign-out eventually, just via its own
+ * next broker round trip once its cached token expires, by which point
+ * AuthWeb has no session left to silently renew it from either.
  */
 
 const SPOKE_TOKEN_KEY = 'blueflames.spoke.tokens'; // { [resourceKey]: { accessToken, idToken, username, expiresOn } }
-// sessionStorage, deliberately NOT localStorage: this is scratch state for
-// THIS tab's own in-flight round trip to AuthWeb ("which tab do I resume
-// into when I get back") — sharing it across tabs would let two tabs
-// mid-round-trip at once clobber each other's pending resume target.
 const SPOKE_PENDING_TAB_KEY = 'blueflames.spoke.pendingTab'; // 'own' | 'graph' — which tab to resume into after a round trip
 
 function loadSpokeTokens() {
     try {
-        return JSON.parse(localStorage.getItem(SPOKE_TOKEN_KEY)) || {};
+        return JSON.parse(sessionStorage.getItem(SPOKE_TOKEN_KEY)) || {};
     } catch (error) {
         return {};
     }
 }
 
 function saveSpokeTokens(tokens) {
-    localStorage.setItem(SPOKE_TOKEN_KEY, JSON.stringify(tokens));
+    sessionStorage.setItem(SPOKE_TOKEN_KEY, JSON.stringify(tokens));
 }
 
 function getCachedToken(resourceKey) {
@@ -114,8 +119,9 @@ function getTokenForResource(resourceKey, resumeTab) {
 }
 
 function signOutOfSpoke() {
-    localStorage.removeItem(SPOKE_TOKEN_KEY); // fires a 'storage' event in any sibling tab of this app — see the listener below
+    sessionStorage.removeItem(SPOKE_TOKEN_KEY);
     sessionStorage.removeItem(SPOKE_PENDING_TAB_KEY);
+    broadcastSpokeSignedOut(); // tells any sibling tab of THIS spoke app before navigating away — see below
     // Routes through AuthWeb's own sign-out, which reaches the Entra ID
     // session cookie itself (not just this tab's copy) — same "End Shift"
     // guarantee as before, now centralized in the one place that actually
@@ -126,22 +132,26 @@ function signOutOfSpoke() {
 }
 
 /**
- * Cross-tab reactivity: the 'storage' event fires in every OTHER tab of this
- * SAME spoke origin (never the tab that made the change) whenever
- * localStorage changes. So if this app is open in two tabs and one of them
- * signs out, the other reflects it immediately instead of carrying on with a
- * technically-still-valid cached token until it naturally expires.
- *
- * This can't reach a DIFFERENT spoke's tab (Titan-UI vs. Phoenix-UI are
- * different origins — localStorage and this event are both strictly
- * per-origin). That gap is accepted, not fixed here: the other spoke's tab
- * still discovers the real sign-out itself, just later — the next time its
- * own cached token expires and it re-brokers with AuthWeb, which by then has
- * no session either.
+ * Live cross-tab signal for THIS spoke app's own sibling tabs (see the big
+ * comment at the top of this file for why sessionStorage alone can't do
+ * this, and why this can't reach a DIFFERENT spoke's tab either). Since
+ * SPOKE_TOKEN_KEY is a plain key this code fully controls — unlike AuthWeb
+ * Hub's MSAL-internal cache — a sibling tab can just clear its own copy
+ * directly on receipt, no need to redo any actual sign-out action.
  */
-window.addEventListener('storage', (event) => {
-    if (event.key !== SPOKE_TOKEN_KEY) return; // ignore unrelated keys (e.g. the network log)
-    if (typeof handleCrossTabTokenChange === 'function') {
-        handleCrossTabTokenChange();
-    }
-});
+const spokeChannel = 'BroadcastChannel' in window ? new BroadcastChannel('blueflames-spoke') : null;
+
+function broadcastSpokeSignedOut() {
+    if (spokeChannel) spokeChannel.postMessage({ type: 'signed-out' });
+}
+
+if (spokeChannel) {
+    spokeChannel.onmessage = (event) => {
+        if (event.data && event.data.type === 'signed-out') {
+            sessionStorage.removeItem(SPOKE_TOKEN_KEY);
+            if (typeof handleCrossTabTokenChange === 'function') {
+                handleCrossTabTokenChange();
+            }
+        }
+    };
+}
