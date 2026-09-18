@@ -22,12 +22,24 @@ const msalConfig = {
         postLogoutRedirectUri: '/',
     },
     cache: {
-        // Same kiosk rationale as before (shared frontline-worker tablets,
-        // reused browser between people) — now it only needs to apply here,
-        // since AuthWeb Hub is the only origin that ever holds a real MSAL
-        // cache. Spokes keep nothing longer-lived than the current tab either
-        // (see their spoke.js), so "sign out" here is enough to clear both.
-        cacheLocation: 'sessionStorage',
+        // localStorage, not sessionStorage: workers routinely have this tablet's
+        // browser open to more than one tab/app at once, and sessionStorage is
+        // scoped per TAB, not just per origin — two tabs on AuthWeb's own
+        // origin would otherwise each think they're the only session. With
+        // localStorage every tab on this origin shares one cache, and a
+        // 'storage' event (see authRedirect.js) lets a sign-out in one tab be
+        // reflected in another immediately.
+        //
+        // The trade-off, carried over from the earlier per-spoke design's
+        // reasoning: unlike sessionStorage, this does NOT get wiped just
+        // because a tab is closed — only an explicit Sign-out (or the idle
+        // auto sign-out) clears it. On a genuinely shared kiosk tablet, closing
+        // a tab without signing out would still leave the next person able to
+        // reuse the session from a fresh tab. Mitigated here by the idle
+        // auto-logout (idleLogout.js) and the kiosk-note reminder, not
+        // eliminated outright — a deliberate trade against the alternative of
+        // fresh-tab users having to sign in again despite an active session.
+        cacheLocation: 'localStorage',
         storeAuthStateInCookie: false, // set this to true if you have to support IE
     },
     system: {

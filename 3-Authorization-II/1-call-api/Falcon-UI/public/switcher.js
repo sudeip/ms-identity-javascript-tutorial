@@ -201,22 +201,46 @@ document.getElementById('graph-btn').addEventListener('click', () => callBlueFla
     if (incoming) {
         const resumeTab = sessionStorage.getItem(SPOKE_PENDING_TAB_KEY) || 'own';
         sessionStorage.removeItem(SPOKE_PENDING_TAB_KEY);
-
-        welcomeUser(incoming.entry.username || 'BlueFlames user');
-        const decodedIdToken = incoming.entry.idToken ? decodeJwtParts(incoming.entry.idToken) : null;
-        updateTable(decodedIdToken ? decodedIdToken.payload : {}, incoming.entry.idToken);
-        callBlueFlamesApp(resumeTab);
+        signInUIWithCachedEntry(incoming.entry, resumeTab);
         return;
     }
 
     const cachedOwn = getCachedToken(THIS_APP.resourceKey);
     if (cachedOwn) {
-        welcomeUser(cachedOwn.username || 'BlueFlames user');
-        const decodedIdToken = cachedOwn.idToken ? decodeJwtParts(cachedOwn.idToken) : null;
-        updateTable(decodedIdToken ? decodedIdToken.payload : {}, cachedOwn.idToken);
-        callBlueFlamesApp('own');
+        signInUIWithCachedEntry(cachedOwn, 'own');
         return;
     }
 
     getTokenForResource(THIS_APP.resourceKey, 'own'); // navigates to AuthWeb Hub — nothing more happens on this page
 })();
+
+/** Shared by the page-load bootstrap above and handleCrossTabTokenChange() below. */
+function signInUIWithCachedEntry(entry, resumeTab) {
+    welcomeUser(entry.username || 'BlueFlames user');
+    const decodedIdToken = entry.idToken ? decodeJwtParts(entry.idToken) : null;
+    updateTable(decodedIdToken ? decodedIdToken.payload : {}, entry.idToken);
+    callBlueFlamesApp(resumeTab);
+}
+
+function resetToSignedOutUI() {
+    signInButton.classList.remove('d-none');
+    signOutButton.classList.add('d-none');
+    titleDiv.classList.remove('d-none');
+    welcomeDiv.classList.add('d-none');
+    document.getElementById('blueflames-section').classList.add('d-none');
+}
+
+/**
+ * Called by spoke.js's 'storage' listener whenever a SIBLING tab of this same
+ * spoke app changes the shared token cache — most notably, hits Sign-out.
+ * Reflects that here immediately rather than waiting for this tab's own
+ * cached token to naturally expire before it notices anything changed.
+ */
+function handleCrossTabTokenChange() {
+    const cachedOwn = getCachedToken(THIS_APP.resourceKey);
+    if (cachedOwn) {
+        signInUIWithCachedEntry(cachedOwn, 'own');
+    } else if (!isSignedIn()) {
+        resetToSignedOutUI();
+    }
+}

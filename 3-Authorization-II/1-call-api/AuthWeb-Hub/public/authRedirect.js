@@ -98,3 +98,17 @@ function signOut() {
         logoutHint: account ? account.username : undefined,
     });
 }
+
+/**
+ * Cross-tab reactivity: the 'storage' event fires in every OTHER tab of this
+ * SAME origin (never the tab that made the change) whenever localStorage
+ * changes — so if AuthWeb Hub happens to be open directly in two tabs and one
+ * of them signs in/out, the other's landing page updates immediately, without
+ * needing a reload. This can't reach a spoke's own tab (Titan-UI/Phoenix-UI/
+ * Falcon-UI are different origins — see their spoke.js for the matching
+ * listener over their own localStorage) — only tabs on AuthWeb's own origin.
+ */
+window.addEventListener('storage', (event) => {
+    if (!event.key || !event.key.startsWith('msal.')) return; // ignore unrelated keys (e.g. the network log)
+    renderHubLanding({ account: myMSALObj.getAllAccounts()[0] });
+});
