@@ -24,18 +24,16 @@ function welcomeUser(username) {
     if (typeof resetIdleTimers === 'function') {
         resetIdleTimers();
     }
-
-    // Auto-fetch this app's own API data immediately on sign-in — including a
-    // silent cross-app sign-in when switching apps — instead of waiting for a
-    // manual "Get ... Data" button click (see switcher.js).
-    if (typeof callBlueFlamesApp === 'function') {
-        callBlueFlamesApp('own');
-    }
 }
 
-function updateTable(account, idToken) {
+/**
+ * @param {Object} idTokenClaims - decoded ID token payload (jwtUtils.js's decodeJwtParts(idToken).payload)
+ * @param {string|null} idToken - raw ID token string, for the "JWT format" panel below the table
+ */
+function updateTable(idTokenClaims, idToken) {
     tableDiv.classList.remove('d-none');
-    const tokenClaims = createClaimsTable(account.idTokenClaims);
+    tableBody.innerHTML = '';
+    const tokenClaims = createClaimsTable(idTokenClaims || {});
 
     Object.keys(tokenClaims).forEach((key) => {
         let row = tableBody.insertRow(0);
@@ -48,6 +46,6 @@ function updateTable(account, idToken) {
     });
 
     if (idTokenRawEl) {
-        idTokenRawEl.textContent = idToken ? formatJwt(idToken) : '(could not refresh — see console)';
+        idTokenRawEl.textContent = idToken ? formatJwt(idToken) : '(no ID token available — see console)';
     }
 }

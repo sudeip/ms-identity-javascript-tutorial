@@ -11,16 +11,16 @@ const appGradient = `linear-gradient(90deg, ${THIS_APP.colorStart}, ${THIS_APP.c
 document.title = THIS_APP.name;
 document.getElementById('app-navbar').style.background = appGradient;
 document.getElementById('app-navbar-brand').textContent = `${THIS_APP.icon} ${THIS_APP.name}`;
-document.getElementById('title-div').textContent =
-    `${THIS_APP.name} — secured with MSAL.js, using AuthWeb's shared app registration`;
+document.getElementById('title-div').textContent = `${THIS_APP.name} — a BlueFlames spoke app, secured via AuthWeb Hub`;
 
-const otherNames = OTHER_APPS.map((app) => app.name).join(' and ');
 document.getElementById('kiosk-note').innerHTML =
     `${THIS_APP.name} is a genuinely independent app on its own origin (<code>localhost:${THIS_APP.port}</code>) — ` +
-    `it shares only an Entra ID app registration (AuthWeb's client ID) with ${otherNames}, not a server or browser storage. ` +
-    `Shared-device mode: tokens live in <code>sessionStorage</code> (cleared when the tab closes), and ` +
-    `<strong>Sign-out (End Shift)</strong> clears all browser storage and signs out of Entra ID itself — ` +
-    `not just this app — so the next person on this tablet never sees a trace of the last session.`;
+    `it holds no Entra ID configuration of its own at all, only its small app id (<code>${THIS_APP.id}</code>). Every ` +
+    `token comes from <a href="${AUTHWEB_HUB_URL}/" target="_blank">AuthWeb Hub</a>, which owns the one app ` +
+    `registration and every BlueFlames app's scope. Shared-device mode: this app's own copy of a token lives in ` +
+    `<code>sessionStorage</code> (cleared when the tab closes), and <strong>Sign-out (End Shift)</strong> routes through ` +
+    `AuthWeb to clear its session and sign out of Entra ID itself — so the next person on this tablet never sees a ` +
+    `trace of the last session.`;
 
 // One "Open <App> App" link per sibling, inserted before the Sign-in button.
 const crossAppLinksEl = document.getElementById('cross-app-links');

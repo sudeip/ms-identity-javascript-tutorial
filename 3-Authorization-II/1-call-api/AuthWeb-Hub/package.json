@@ -1,0 +1,16 @@
+{
+    "name": "blueflames-authweb-hub",
+    "version": "1.0.0",
+    "description": "AuthWeb Hub — the single MSAL client and Entra ID identity holder for every BlueFlames app. Spoke apps (Titan-UI, Phoenix-UI, Falcon-UI) hold no Entra config of their own; they broker tokens through this app.",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@azure/msal-browser": "^2.37.0",
+        "express": "5.2.1",
+        "morgan": "1.12.0"
+    }
+}

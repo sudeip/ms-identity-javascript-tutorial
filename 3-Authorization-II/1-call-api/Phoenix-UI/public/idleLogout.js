@@ -4,10 +4,10 @@
  * Frontline workers on a shared tablet won't always remember to tap
  * "Sign-out (End Shift)" before walking away. This is defense-in-depth for
  * that: after a period of no interaction, show a warning, then automatically
- * run the real signOut() flow (authRedirect.js/authPopup.js) if nobody
- * responds. This DOES reach Entra ID's own session cookie, not just this
- * app, because it runs while the tab is still open and can complete the
- * redirect.
+ * run the real signOutOfSpoke() flow (spoke.js) if nobody responds. This
+ * DOES reach Entra ID's own session cookie, not just this app's local
+ * tokens, because signOutOfSpoke() routes through AuthWeb Hub's own
+ * sign-out while the tab is still open and can complete the redirect.
  *
  * This file used to also clear storage on 'pagehide' (tab closing /
  * navigating away) as a belt-and-braces safety net. That was removed: a
@@ -73,9 +73,9 @@ function triggerIdleLogout() {
     hideIdleWarning();
     // Only actually sign out if someone is currently signed in — no point
     // "logging out" a device already sitting idle at the sign-in screen.
-    if (myMSALObj.getAllAccounts().length > 0) {
+    if (isSignedIn()) {
         console.warn('[Kiosk] Signing out automatically due to inactivity.');
-        signOut();
+        signOutOfSpoke();
     }
 }
 
@@ -84,7 +84,7 @@ function resetIdleTimers() {
     clearTimeout(idleWarningTimer);
     clearTimeout(idleLogoutTimer);
 
-    if (myMSALObj.getAllAccounts().length === 0) return;
+    if (!isSignedIn()) return;
 
     idleWarningTimer = setTimeout(() => {
         showIdleWarning();

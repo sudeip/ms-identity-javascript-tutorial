@@ -6,21 +6,24 @@
  * Two capture mechanisms, because MSAL's authorize/logout calls are full
  * browser navigations, not fetch() calls, while everything else is:
  *
- *   1. A custom MSAL NavigationClient (installed in authRedirect.js /
- *      authPopup.js via setNavigationClient) captures the exact authorize/
- *      logout URL MSAL builds — including client_id, scope, redirect_uri,
- *      response_type, code_challenge, state, logout_hint, etc. — then
- *      performs the identical default navigation MSAL would have anyway.
+ *   1. A custom MSAL NavigationClient (installed in authRedirect.js — only on
+ *      AuthWeb Hub, the one app with an actual MSAL instance; a spoke app
+ *      has none, so this mechanism is simply inert there) captures the exact
+ *      authorize/logout URL MSAL builds — including client_id, scope,
+ *      redirect_uri, response_type, code_challenge, state, logout_hint, etc.
+ *      — then performs the identical default navigation MSAL would have
+ *      anyway.
  *
  *   2. A global fetch() wrapper captures everything else: MSAL's own
  *      token-endpoint POST and OIDC-metadata/JWKS GETs (MSAL uses fetch()
  *      internally by default — see @azure/msal-browser's FetchClient.js —
- *      so this catches those with no MSAL-specific hook needed), plus this
- *      app's own calls to the Phoenix/Titan/Graph APIs (fetch.js's callApi()).
+ *      so this catches those with no MSAL-specific hook needed), plus (on a
+ *      spoke app) its own calls to its API/Graph via fetch.js's callApi().
  *
  * Entries persist in sessionStorage so the log survives the full-page
  * redirect round-trip for sign-in/out — otherwise the entry logged right
- * before navigating away to Entra ID would be lost when the page reloads.
+ * before navigating away to Entra ID (or to AuthWeb Hub, for a spoke) would
+ * be lost when the page reloads.
  *
  * Demo-only note: this deliberately shows full request/response bodies,
  * including tokens — appropriate for a live demo (this app already shows
@@ -71,10 +74,13 @@ function labelForUrl(url) {
     if (pathname.endsWith('/.well-known/openid-configuration')) return 'Entra ID — OIDC discovery';
     if (pathname.endsWith('/discovery/v2.0/keys')) return 'Entra ID — JWKS (signing keys)';
     if (hostname === 'graph.microsoft.com') return 'Microsoft Graph';
-    if (typeof protectedResources !== 'undefined') {
-        for (const key of Object.keys(protectedResources)) {
-            if (url.indexOf(protectedResources[key].endpoint) === 0) {
-                return `${key} API`;
+
+    // A spoke's own API call (apps.js — always available, hub included).
+    if (typeof BLUEFLAMES_APPS !== 'undefined') {
+        for (const key of Object.keys(BLUEFLAMES_APPS)) {
+            const entry = BLUEFLAMES_APPS[key];
+            if (entry.apiEndpoint && url.indexOf(entry.apiEndpoint) === 0) {
+                return `${entry.name} API`;
             }
         }
     }
@@ -176,7 +182,7 @@ function renderNetworkLog() {
 }
 
 // ── Capture every fetch() call — MSAL's own (token endpoint, OIDC discovery,
-// JWKS) and this app's own (Phoenix/Titan/Graph, via fetch.js's callApi()) ──
+// JWKS) and this app's own (a spoke's API/Graph calls, via fetch.js's callApi()) ──
 const originalFetch = window.fetch.bind(window);
 window.fetch = async function (input, init) {
     const url = typeof input === 'string' ? input : input.url;

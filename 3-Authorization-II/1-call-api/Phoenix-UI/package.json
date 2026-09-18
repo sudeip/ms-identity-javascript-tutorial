@@ -10,7 +10,6 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@azure/msal-browser": "^2.37.0",
         "express": "5.2.1",
         "morgan": "1.12.0"
     },

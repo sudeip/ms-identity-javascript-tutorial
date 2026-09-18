@@ -18,11 +18,9 @@ app.use(morgan('dev'));
 // real code change look like it "isn't taking effect."
 app.use(express.static('public', { setHeaders: (res) => res.setHeader('Cache-Control', 'no-store') }));
 
-// set up a route for redirect.html
-app.get('/redirect', (req, res) => {
-    res.setHeader('Cache-Control', 'no-store');
-    res.sendFile(path.join(__dirname + '/public/redirect.html'));
-});
+// No /redirect route here — a spoke app never talks to Entra ID directly, so
+// it never needs an MSAL redirectUri of its own. Only AuthWeb Hub's origin
+// is registered as a redirect URI in Entra.
 
 // Set up a route for index.html
 app.get('/', (req, res) => {

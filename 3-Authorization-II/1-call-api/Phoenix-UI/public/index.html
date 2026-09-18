@@ -7,10 +7,7 @@
     <title>BlueFlames App</title>
     <link rel="SHORTCUT ICON" href="./favicon.svg" type="image/x-icon">
     <link rel="stylesheet" href="./styles.css">
-    <!-- msal.min.js can be used in the place of msal.js; included msal.js to make debug easy -->
-    <script id="load-msal" src="https://alcdn.msauth.net/browser/2.31.0/js/msal-browser.js"
-        integrity="sha384-BO4qQ2RTxj2akCJc7t6IdU9aRg6do4LGIkVVa01Hm33jxM+v2G+4q+vZjmOCywYq"
-        crossorigin="anonymous"></script>
+    <!-- No msal-browser script here — this is a spoke app, it never talks to Entra ID directly (see spoke.js). -->
     <!-- adding Bootstrap 5 for UI components  -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
@@ -33,8 +30,8 @@
         <a class="navbar-brand" href="#" onclick="return false;" id="app-navbar-brand"></a>
         <div class="navbar-collapse justify-content-end">
             <span id="cross-app-links"></span>
-            <button type="button" id="signIn" class="btn btn-secondary" onclick="signIn()">Sign-in</button>
-            <button type="button" id="signOut" class="btn btn-danger d-none" onclick="signOut()">🔒 Sign-out (End Shift)</button>
+            <button type="button" id="signIn" class="btn btn-secondary" onclick="getTokenForResource(THIS_APP.resourceKey, 'own')">Sign-in</button>
+            <button type="button" id="signOut" class="btn btn-danger d-none" onclick="signOutOfSpoke()">🔒 Sign-out (End Shift)</button>
         </div>
     </nav>
     <p class="text-center text-muted kiosk-note" id="kiosk-note"></p>
@@ -43,7 +40,7 @@
     <h5 id="title-div" class="card-header text-center"></h5>
     <h5 id="welcome-div" class="card-header text-center d-none"></h5>
     <br>
-    <!-- Cross-app SSO demo: sign in here, then open another app — it should sign you in silently (see authRedirect.js) -->
+    <!-- Cross-app SSO demo: sign in here, then open another app — it should sign you in silently via AuthWeb Hub (see spoke.js) -->
     <div id="blueflames-section" class="blueflames-card d-none">
         <div id="brand-banner" class="brand-banner">
             <span id="brand-icon" class="brand-icon"></span>
@@ -119,11 +116,11 @@
         </div>
     </details>
 
-    <!-- Demo aid: shows the actual requests to Entra ID (authorize/token/logout) and this app's own
-         API, so you don't need DevTools' Network tab to show this live. -->
+    <!-- Demo aid: shows the actual requests this app makes (its own API/Graph, plus the
+         round trip to AuthWeb Hub), so you don't need DevTools' Network tab to show this live. -->
     <div class="blueflames-card network-log-card">
         <div class="network-log-header">
-            <h6 class="mb-0">🌐 Network Log — requests to Entra ID &amp; the API</h6>
+            <h6 class="mb-0">🌐 Network Log — requests to this app's API &amp; AuthWeb Hub</h6>
             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearNetworkLog()">Clear</button>
         </div>
         <p class="text-muted small mb-2">Click a row to expand it — shows the exact query params or POST body sent, and the response received.</p>
@@ -142,27 +139,27 @@
         crossorigin="anonymous"></script>
 
     <!-- importing app scripts (load order is important) -->
-    <!-- App identity registry: which app am I, what are my siblings called/colored/ported.
-         Loaded first since authConfig.js and ui-identity.js both read from it. -->
+    <!-- App identity registry: which app am I, what are my siblings called/colored/ported/id'd.
+         Loaded first since authConfig.js, spoke.js and ui-identity.js all read from it. -->
     <script type="text/javascript" src="./apps.js"></script>
+    <!-- This app's ENTIRE Entra footprint: just AuthWeb Hub's URL. No client ID, no scopes. -->
     <script type="text/javascript" src="./authConfig.js"></script>
-    <!-- Demo aid: logs requests to Entra ID/the API. Needs protectedResources from authConfig.js
-         above; must load before authRedirect.js below, which references logNetworkEntry() directly.
-         Its fetch() wrapper transparently catches MSAL's and fetch.js's calls without them knowing. -->
+    <!-- Demo aid: logs requests this app makes (its own API/Graph calls) — no Entra ID requests happen
+         here at all anymore, those all happen over at AuthWeb Hub. Its fetch() wrapper transparently
+         catches fetch.js's calls without it knowing. -->
     <script type="text/javascript" src="./networkLog.js"></script>
     <script type="text/javascript" src="./ui.js"></script>
     <script type="text/javascript" src="./claimUtils.js"></script>
-    <!-- <script type="text/javascript" src="./authPopup.js"></script> -->
-    <!-- using the redirect flow instead of popup: better fit for a kiosk browser, where popups can be unreliable or blocked -->
-    <script type="text/javascript" src="./authRedirect.js"></script>
+    <script type="text/javascript" src="./jwtUtils.js"></script>
     <script type="text/javascript" src="./fetch.js"></script>
-    <!-- AuthWeb shared library + switcher UI (needs myMSALObj from authRedirect.js and callApi from fetch.js above) -->
-    <script type="text/javascript" src="./authWeb.js"></script>
+    <!-- spoke.js: this app's entire auth client — gets tokens from AuthWeb Hub via full-page round
+         trips, never from a local MSAL instance (there isn't one). Needs AUTHWEB_HUB_URL/THIS_APP above. -->
+    <script type="text/javascript" src="./spoke.js"></script>
     <script type="text/javascript" src="./switcher.js"></script>
     <!-- Applies apps.js's identity (name/icon/color, cross-app links) to the page. Runs after
          switcher.js since it reuses switcher.js's setBrand()/showBlueFlamesSection(). -->
     <script type="text/javascript" src="./ui-identity.js"></script>
-    <!-- Kiosk hardening: inactivity auto sign-out + best-effort clear on tab close (needs myMSALObj/signOut from authRedirect.js above) -->
+    <!-- Kiosk hardening: inactivity auto sign-out (needs isSignedIn()/signOutOfSpoke() from spoke.js above) -->
     <script type="text/javascript" src="./idleLogout.js"></script>
 </body>
 </html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>AuthWeb Hub</title>
+    <link rel="SHORTCUT ICON" href="./favicon.svg" type="image/x-icon">
+    <link rel="stylesheet" href="./styles.css">
+    <!-- msal.min.js can be used in the place of msal.js; included msal.js to make debug easy -->
+    <script id="load-msal" src="https://alcdn.msauth.net/browser/2.31.0/js/msal-browser.js"
+        integrity="sha384-BO4qQ2RTxj2akCJc7t6IdU9aRg6do4LGIkVVa01Hm33jxM+v2G+4q+vZjmOCywYq"
+        crossorigin="anonymous"></script>
+    <!-- adding Bootstrap 5 for UI components  -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+</head>
+
+<body>
+    <!--
+        AuthWeb Hub — the ONE app in this demo that holds an actual MSAL
+        client/Entra ID identity. Titan-UI/Phoenix-UI/Falcon-UI never render
+        this page directly — they redirect here whenever they need a token
+        (?app=<id>&return=<url>) and this page bounces straight back once
+        it's resolved one, usually invisibly. A direct visit here (no
+        app/return in the URL) just shows AuthWeb's own sign-in state below.
+    -->
+    <nav class="navbar navbar-expand-sm navbar-dark navbarStyle" id="app-navbar" style="background: linear-gradient(90deg, #0d6efd, #6610f2);">
+        <a class="navbar-brand" href="#" onclick="return false;" id="app-navbar-brand">🔑 AuthWeb Hub</a>
+        <div class="navbar-collapse justify-content-end">
+            <button type="button" id="signIn" class="btn btn-secondary" onclick="signIn()">Sign-in</button>
+            <button type="button" id="signOut" class="btn btn-danger d-none" onclick="signOut()">🔒 Sign-out (End Shift)</button>
+        </div>
+    </nav>
+    <p class="text-center text-muted kiosk-note">
+        AuthWeb Hub is the only BlueFlames app with real Entra ID configuration — one client ID, one tenant, one map of
+        which spoke app needs which scope (<code>authConfig.js</code>). Titan, Phoenix and Falcon hold none of that
+        themselves; they pass their small app id here and get a token back. Tokens live in <code>sessionStorage</code>
+        here only (cleared when the tab closes) — <strong>Sign-out (End Shift)</strong> clears this session and signs out
+        of Entra ID itself, which every spoke's own sign-out also routes through.
+    </p>
+
+    <div id="broker-note" class="broker-note d-none"></div>
+
+    <br>
+    <h5 id="title-div" class="card-header text-center">You are not signed in.</h5>
+    <h5 id="welcome-div" class="card-header text-center d-none"></h5>
+    <br>
+
+    <div class="spoke-links" id="spoke-links"></div>
+
+    <div class="output-panel id-token-raw-panel" id="id-token-panel">
+        <details class="claims-details" open>
+            <summary>Your ID token claims (held here, borrowed by every BlueFlames app)</summary>
+            <div id="idTokenTable" class="table-responsive-ms">
+                <table id="table-div" class="table table-striped claims-table d-none">
+                    <thead id="table-head-div">
+                        <tr>
+                            <th>Claim Type</th>
+                            <th>Value</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body-div"></tbody>
+                </table>
+            </div>
+        </details>
+    </div>
+
+    <!-- Demo aid: shows the actual requests to Entra ID, so you don't need DevTools' Network tab to show this live. -->
+    <div class="blueflames-card network-log-card">
+        <div class="network-log-header">
+            <h6 class="mb-0">🌐 Network Log — requests to Entra ID</h6>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearNetworkLog()">Clear</button>
+        </div>
+        <p class="text-muted small mb-2">Click a row to expand it — shows the exact query params or POST body sent, and the response received.</p>
+        <div id="network-log-entries"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
+        </script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+        integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+        crossorigin="anonymous"></script>
+
+    <!-- App identity registry: powers the "open a spoke app" links below and networkLog.js's labeling. -->
+    <script type="text/javascript" src="./apps.js"></script>
+    <script type="text/javascript" src="./authConfig.js"></script>
+    <!-- Needs protectedResources (authConfig.js) + BLUEFLAMES_APPS (apps.js); must load before authRedirect.js, which references logNetworkEntry() directly. -->
+    <script type="text/javascript" src="./networkLog.js"></script>
+    <script type="text/javascript" src="./claimUtils.js"></script>
+    <!-- broker.js's functions (renderHubLanding, resolveBrokerRequest, ...) are referenced by authRedirect.js, so it must load first. -->
+    <script type="text/javascript" src="./broker.js"></script>
+    <script type="text/javascript" src="./authRedirect.js"></script>
+
+    <script type="text/javascript">
+        // Populate the "open a spoke app" links from apps.js — nothing here is per-app hardcoded.
+        const spokeLinksEl = document.getElementById('spoke-links');
+        Object.values(BLUEFLAMES_APPS).forEach((app) => {
+            const link = document.createElement('a');
+            link.href = `http://localhost:${app.port}/`;
+            link.className = 'spoke-link';
+            link.style.background = `linear-gradient(90deg, ${app.colorStart}, ${app.colorEnd})`;
+            link.textContent = `${app.icon} Open ${app.name} →`;
+            spokeLinksEl.appendChild(link);
+        });
+    </script>
+</body>
+</html>

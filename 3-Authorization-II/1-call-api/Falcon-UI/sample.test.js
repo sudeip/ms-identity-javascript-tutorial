@@ -19,28 +19,19 @@ describe('Sanitize index page', () => {
         global.document.documentElement.innerHTML = html.toString();
     });
 
-    it('should have valid cdn link', () => {
-        expect(document.getElementById("load-msal").getAttribute("src")).toContain("https://alcdn.msauth.net/browser");
+    it('should NOT load msal-browser — a spoke app never talks to Entra ID directly', () => {
+        expect(document.getElementById('load-msal')).toBeNull();
     });
 });
 
-describe('Sanitize configuration object', () => {
+describe('Sanitize spoke configuration', () => {
     beforeAll(() => {
-        global.msalConfig = require('./public/authConfig.js').msalConfig;
+        global.AUTHWEB_HUB_URL = require('./public/authConfig.js').AUTHWEB_HUB_URL;
     });
 
-    it('should define the config object', () => {
-        expect(msalConfig).toBeDefined();
-    });
-
-    it('should not contain credentials', () => {
-        const regexGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        expect(regexGuid.test(msalConfig.auth.clientId)).toBe(false);
-    });
-
-    it('should contain authority URI', () => {
-        const regexUri = /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/gi;
-        expect(regexUri.test(msalConfig.auth.authority)).toBe(true);
+    it('should point at AuthWeb Hub, not embed any Entra ID credentials', () => {
+        expect(AUTHWEB_HUB_URL).toBeDefined();
+        expect(AUTHWEB_HUB_URL).toMatch(/^https?:\/\//);
     });
 });
 
